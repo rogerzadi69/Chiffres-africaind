@@ -151,10 +151,14 @@
     width: 17px; height: 17px;
     filter: brightness(0) saturate(100%) invert(84%) sepia(28%) saturate(700%) hue-rotate(1deg) brightness(1.05);
   }
-  .chiffre-brut {
-    font-size: 11px; color: var(--alerte); background: rgba(216,71,43,0.18);
-    border: 1px solid rgba(216,71,43,0.5); border-radius: 5px;
-    padding: 1px 4px; line-height: 1.4;
+  .groupe-glyphes {
+    display: inline-flex; gap: 2px; align-items: center;
+    background: rgba(216,71,43,0.18); border: 1px solid rgba(216,71,43,0.5);
+    border-radius: 5px; padding: 2px 4px;
+  }
+  .groupe-glyphes img {
+    width: 15px; height: 15px;
+    filter: brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(2000%) hue-rotate(340deg) brightness(1.1);
   }
   .lecture-egal { color: var(--papier); opacity: 0.5; font-size: 13px; }
   .lecture-arabe { font-family: Georgia, serif; font-size: 21px; letter-spacing: 0.03em; color: #fff; }
@@ -214,6 +218,11 @@
   .graines {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
     width: 68%; height: 68%; align-content: center; justify-content: center; justify-items: center; align-items: center;
+    transition: width 0.2s ease, height 0.2s ease;
+  }
+  .graines.denses {
+    grid-template-columns: repeat(5, 1fr); gap: 2px;
+    width: 86%; height: 86%;
   }
   .graine {
     width: clamp(8px, 1.6vw, 13px); height: clamp(8px, 1.6vw, 13px); border-radius: 50%;
@@ -221,21 +230,21 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(0,0,0,0.4);
     animation: poser 0.28s ease;
   }
+  .graines.denses .graine {
+    width: clamp(5px, 1vw, 8px); height: clamp(5px, 1vw, 8px);
+  }
   @keyframes poser { from { transform: scale(0) translateY(-6px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-  .nombre-brut {
-    font-family: Georgia, serif; font-size: clamp(16px, 2.6vw, 22px); font-weight: bold;
-    color: var(--alerte);
-  }
-
-  .valeur-glyphe {
-    position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
-    background: var(--terre); box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
+  .badge-glyphes {
+    position: absolute; top: -8px; right: -8px;
+    display: flex; gap: 1px; align-items: center;
+    background: var(--terre); border-radius: 9px;
+    padding: 3px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .village.avec-glyphe .valeur-glyphe { opacity: 1; transform: scale(1); }
-  .valeur-glyphe img { width: 11px; height: 11px; filter: brightness(0) invert(1); }
+  .village.avec-glyphe .badge-glyphes { opacity: 1; transform: scale(1); }
+  .badge-glyphes img { width: 10px; height: 10px; filter: brightness(0) invert(1); }
+  .village.attire.conversion .badge-glyphes { background: var(--alerte); }
 
   /* ---- Colonne vertébrale centrale ---- */
   .colonne-vertebrale { margin: 4px 0 30px; }
@@ -495,14 +504,9 @@
         graines.className = 'graines';
         trou.appendChild(graines);
 
-        var nombreBrut = document.createElement('div');
-        nombreBrut.className = 'nombre-brut';
-        trou.appendChild(nombreBrut);
-
-        var valeurGlyphe = document.createElement('div');
-        valeurGlyphe.className = 'valeur-glyphe';
-        valeurGlyphe.appendChild(creerImg(0));
-        trou.appendChild(valeurGlyphe);
+        var badgeGlyphes = document.createElement('div');
+        badgeGlyphes.className = 'badge-glyphes';
+        trou.appendChild(badgeGlyphes);
 
         villageEl.appendChild(trou);
         conteneur.appendChild(villageEl);
@@ -575,8 +579,7 @@
         var compte = row[idx];
         var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
         var graines = villageEl.querySelector('.graines');
-        var nombreBrut = villageEl.querySelector('.nombre-brut');
-        var valeurImg = villageEl.querySelector('.valeur-glyphe img');
+        var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
 
         var estActif = false, attireFusion = false, attireConversion = false;
         if (etat.phase === 'composition') {
@@ -593,24 +596,26 @@
         villageEl.classList.toggle('fusion', attireFusion);
         villageEl.classList.toggle('conversion', attireConversion);
 
-        if (compte <= 9) {
-          graines.style.display = '';
-          nombreBrut.style.display = 'none';
-          graines.innerHTML = '';
-          for (var s = 0; s < compte; s++) {
-            var grain = document.createElement('span');
-            grain.className = 'graine';
-            graines.appendChild(grain);
-          }
-          valeurImg.src = GLYPHES[compte];
-          valeurImg.alt = String(compte);
-          villageEl.classList.toggle('avec-glyphe', compte > 0);
-        } else {
-          graines.style.display = 'none';
-          nombreBrut.style.display = 'block';
-          nombreBrut.textContent = compte;
-          villageEl.classList.remove('avec-glyphe');
+        // Toujours des pions dans le village, jamais de chiffre arabe.
+        graines.classList.toggle('denses', compte > 9);
+        graines.innerHTML = '';
+        for (var s = 0; s < compte; s++) {
+          var grain = document.createElement('span');
+          grain.className = 'graine';
+          graines.appendChild(grain);
         }
+
+        // L'étiquette affiche le compte en chiffres africains (un ou deux glyphes).
+        badgeGlyphes.innerHTML = '';
+        if (compte > 0) {
+          if (compte <= 9) {
+            badgeGlyphes.appendChild(creerImg(compte));
+          } else {
+            badgeGlyphes.appendChild(creerImg(Math.floor(compte / 10)));
+            badgeGlyphes.appendChild(creerImg(compte % 10));
+          }
+        }
+        villageEl.classList.toggle('avec-glyphe', compte > 0);
       }
 
       // rangée éteinte (grisée) : rangée B une fois la fusion terminée
@@ -622,7 +627,7 @@
       document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = valeurLigne.toLocaleString('fr-FR');
       document.querySelector('[data-lecture-lettres="' + r + '"]').textContent = nombreEnLettres(valeurLigne);
 
-      // lecture africaine : un glyphe par village si <= 9, sinon nombre brut encadré
+      // lecture africaine : un glyphe par village, ou deux glyphes groupés si le village n'est pas encore converti
       var digitsGaucheADroite = row.slice().reverse();
       var lectureAfricaine = document.querySelector('[data-lecture-africaine="' + r + '"]');
       lectureAfricaine.innerHTML = '';
@@ -630,10 +635,11 @@
         if (d <= 9) {
           lectureAfricaine.appendChild(creerImg(d));
         } else {
-          var span = document.createElement('span');
-          span.className = 'chiffre-brut';
-          span.textContent = d;
-          lectureAfricaine.appendChild(span);
+          var groupe = document.createElement('span');
+          groupe.className = 'groupe-glyphes';
+          groupe.appendChild(creerImg(Math.floor(d / 10)));
+          groupe.appendChild(creerImg(d % 10));
+          lectureAfricaine.appendChild(groupe);
         }
       });
 
