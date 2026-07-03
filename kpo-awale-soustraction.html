@@ -17,11 +17,11 @@
     --alerte: #D8472B;
     --succes: #2F7A4D;
 
-    --bois-1: #6B4327;
-    --bois-2: #4A2E18;
-    --bois-3: #34200F;
-    --bois-rim: #8A5A34;
-    --creux: #20120A;
+    --bois-1: #B5824C;
+    --bois-2: #8F6234;
+    --bois-3: #6E4A26;
+    --bois-rim: #C99755;
+    --creux: #2B1A0F;
     --graine-1: #E7B96E;
     --graine-2: #A6672B;
     --graine-3: #7A4A1D;
@@ -413,12 +413,15 @@
   ];
   var MAX_VILLAGES = 7;
   var MAX_COMPOSITION = 9;
+  var PAUSE_EMPRUNT_MS = 5000;
 
   var NOMS_POSITION = ['unités', 'dizaines', 'centaines', 'mille', 'dix mille', 'cent mille', 'million'];
 
   var etat = {
     phase: 'composition', // composition | soustraction
-    rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ]
+    rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ],
+    enAttente: false,
+    generation: 0
   };
 
   function creerImg(chiffre) {
@@ -523,10 +526,10 @@
     }
   }
 
-  function afficherMessage(texte) {
+  function afficherMessage(texte, duree) {
     var el = document.getElementById('message');
     el.textContent = texte;
-    if (texte) setTimeout(function () { if (el.textContent === texte) el.textContent = ''; }, 2600);
+    if (texte) setTimeout(function () { if (el.textContent === texte) el.textContent = ''; }, duree || 2600);
   }
 
   function flashPlein(r, pos) {
@@ -556,7 +559,7 @@
 
   // Cherche, à partir de p+1 vers la gauche, le premier village qui contient au moins un pion,
   // puis fait descendre l'emprunt de proche en proche jusqu'au village p.
-  // Renvoie la liste des villages touchés (dans l'ordre de l'animation), ou null si aucun secours n'existe.
+  // Renvoie la description et la liste des villages touchés, ou null si aucun secours n'existe.
   function emprunterVers(row, p) {
     var q = p + 1;
     while (q < MAX_VILLAGES && row[q] === 0) q++;
@@ -569,13 +572,13 @@
       touches.push(i);
     }
     touches.push(p);
-    afficherMessage(decrireEmprunt(q, p));
     animerEmprunt(touches);
-    return touches;
+    return { touches: touches, description: decrireEmprunt(q, p) };
   }
 
   function onPitClick(r, pos) {
     var idx = pos - 1;
+    if (etat.enAttente) return;
 
     if (etat.phase === 'composition') {
       if (etat.rows[r][idx] >= MAX_COMPOSITION) {
@@ -599,6 +602,24 @@
           afficherMessage('Impossible de retirer ici : il n’y a plus de pions à emprunter plus loin dans la rangée A. Vérifie que le premier nombre est bien le plus grand.');
           return;
         }
+
+        // On marque un temps d'arrêt pour bien voir le village recevoir ses dix pions
+        // avant que le retrait ne se fasse.
+        etat.enAttente = true;
+        var generationAuLancement = etat.generation;
+        rendreTout();
+        afficherMessage(
+          resultat.description + ' Le village en difficulté a maintenant assez de pions : le retrait se fait dans 5 secondes…',
+          PAUSE_EMPRUNT_MS + 300
+        );
+        setTimeout(function () {
+          if (etat.generation !== generationAuLancement) return; // le plateau a été vidé entre-temps
+          a[idx] -= valeur;
+          etat.rows[1][idx] = 0;
+          etat.enAttente = false;
+          rendreTout();
+        }, PAUSE_EMPRUNT_MS);
+        return;
       }
 
       a[idx] -= valeur;
@@ -619,7 +640,9 @@
         var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
 
         var estActif = false, attireFusion = false;
-        if (etat.phase === 'composition') {
+        if (etat.enAttente) {
+          // Rien n'est cliquable pendant la pause qui suit un emprunt.
+        } else if (etat.phase === 'composition') {
           estActif = true;
         } else if (etat.phase === 'soustraction' && r === 1) {
           estActif = compte > 0;
@@ -726,8 +749,10 @@
   });
 
   document.getElementById('btn-recommencer').addEventListener('click', function () {
+    etat.generation++;
     etat.phase = 'composition';
     etat.rows = [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ];
+    etat.enAttente = false;
     afficherMessage('');
     rendreTout();
   });
