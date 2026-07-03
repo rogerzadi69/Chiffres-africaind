@@ -12,6 +12,7 @@ de numération africain à logique constructive.
 | 2 | `lire-les-chiffres.html` | Quiz de lecture : des glyphes africains aux chiffres arabes |
 | 3 | `ecrire-les-chiffres-arabes.html` | Tracer les chiffres arabes, guidé par le glyphe africain |
 | 4 | `calculatrice-africaine.html` | Calculatrice à double écran (africain + conversion arabe) |
+| Atelier | `awale-composer-les-nombres.html` | Plateau d'awalé pour composer des nombres avec des pions (report de dix en un) |
 
 ## Utilisation
 

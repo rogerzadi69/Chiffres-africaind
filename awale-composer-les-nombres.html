@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kpo-awalé — Composer les nombres avec les pions</title>
+<style>
+  :root {
+    --encre: #1E3A8A;
+    --encre-douce: rgba(30, 58, 138, 0.62);
+    --encre-pale: rgba(30, 58, 138, 0.10);
+    --papier: #FAF8F2;
+    --papier-fonce: #F1EDE2;
+    --blanc: #FFFFFF;
+    --terre: #B4532F;
+    --or: #D9A441;
+
+    --bois-1: #6B4327;
+    --bois-2: #4A2E18;
+    --bois-3: #34200F;
+    --bois-rim: #8A5A34;
+    --creux: #20120A;
+    --graine-1: #E7B96E;
+    --graine-2: #A6672B;
+    --graine-3: #7A4A1D;
+
+    --largeur-trou: clamp(52px, 8vw, 82px);
+    --ecart-trous: clamp(10px, 1.6vw, 20px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--papier);
+    background-image: radial-gradient(rgba(30,58,138,0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--encre);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ============ BANDEAU ============ */
+  header {
+    max-width: 980px; margin: 0 auto;
+    padding: 48px 24px 8px;
+    text-align: center;
+  }
+  .retour {
+    display: inline-block;
+    font-size: 12px; letter-spacing: 0.1em;
+    color: var(--encre-douce);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    margin-bottom: 22px;
+  }
+  .retour:hover { border-bottom-color: var(--encre-douce); }
+  .surtitre {
+    font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--terre); margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 50px);
+    font-weight: normal; line-height: 1.1;
+  }
+  .soustitre {
+    margin: 16px auto 0; max-width: 640px;
+    font-size: 16px; font-style: italic;
+    color: var(--encre-douce); line-height: 1.6;
+  }
+
+  /* ============ REGLE ============ */
+  .regle {
+    max-width: 760px;
+    margin: 30px auto 0;
+    background: var(--blanc);
+    border: 1.5px solid var(--encre);
+    border-radius: 18px;
+    padding: 20px 26px;
+    box-shadow: 0 4px 0 var(--encre);
+  }
+  .regle h2 {
+    font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    font-weight: normal; color: var(--terre); margin-bottom: 10px;
+  }
+  .regle p { font-size: 14.5px; line-height: 1.7; color: var(--encre-douce); }
+  .regle p + p { margin-top: 10px; }
+  .regle strong { color: var(--encre); font-weight: bold; }
+
+  /* ============ PLATEAU ============ */
+  main { max-width: 1080px; margin: 0 auto; padding: 40px 16px 30px; }
+
+  .plateau-enveloppe {
+    overflow-x: auto;
+    padding: 10px 4px 26px;
+  }
+
+  .plateau {
+    position: relative;
+    width: max-content;
+    min-width: 100%;
+    margin: 0 auto;
+    padding: clamp(22px, 3vw, 42px) clamp(30px, 5vw, 64px);
+    border-radius: 46px;
+    background:
+      repeating-linear-gradient(100deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 7px),
+      radial-gradient(ellipse at 30% 20%, var(--bois-1), var(--bois-2) 55%, var(--bois-3) 100%);
+    box-shadow:
+      0 30px 60px -20px rgba(30,20,10,0.55),
+      0 2px 0 rgba(255,255,255,0.06) inset,
+      0 0 0 10px var(--bois-3),
+      0 0 0 12px var(--bois-rim);
+  }
+
+  .plateau::before, .plateau::after {
+    content: '';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
+      repeating-radial-gradient(circle, rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.3) 2px, transparent 2px, transparent 5px);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.28) inset, 0 2px 4px rgba(0,0,0,0.4);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .plateau::before { left: 14px; }
+  .plateau::after { right: 14px; }
+
+  /* ---- Bandeau de lecture (haut pour rangée A, bas pour rangée B) ---- */
+  .lecture-panel {
+    display: flex; flex-direction: column; gap: 8px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 12px 20px 14px;
+    width: max-content;
+    min-width: min(100%, 480px);
+    margin: 0 auto;
+  }
+  .lecture-panel[data-panel="0"] { margin-bottom: 22px; }
+  .lecture-panel[data-panel="1"] { margin-top: 22px; }
+
+  .lecture-entete {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .lecture-nom {
+    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--graine-1);
+  }
+  .btn-vider {
+    font-size: 11px; letter-spacing: 0.1em;
+    color: var(--papier);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-vider:hover { background: rgba(255,255,255,0.18); }
+
+  .lecture-corps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .lecture-africaine { display: flex; gap: 3px; }
+  .lecture-africaine img {
+    width: 17px; height: 17px;
+    filter: brightness(0) saturate(100%) invert(84%) sepia(28%) saturate(700%) hue-rotate(1deg) brightness(1.05);
+  }
+  .lecture-egal { color: var(--papier); opacity: 0.5; font-size: 13px; }
+  .lecture-arabe {
+    font-family: Georgia, serif; font-size: 21px; letter-spacing: 0.03em;
+    color: #fff;
+  }
+  .lecture-lettres {
+    font-size: 13px; font-style: italic;
+    color: var(--graine-1); opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  /* ---- Villages ---- */
+  .trous {
+    display: flex;
+    gap: var(--ecart-trous);
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .village {
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+  }
+
+  .trou {
+    position: relative;
+    width: var(--largeur-trou);
+    height: var(--largeur-trou);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, #3a2415 0%, var(--creux) 68%, #150a05 100%);
+    box-shadow:
+      inset 0 8px 14px rgba(0,0,0,0.75),
+      inset 0 -3px 6px rgba(255,255,255,0.05),
+      0 1px 0 rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .village.cliquable .trou {
+    cursor: pointer;
+    box-shadow:
+      inset 0 8px 14px rgba(0,0,0,0.75),
+      inset 0 -3px 6px rgba(255,255,255,0.05),
+      0 0 0 4px rgba(217,164,65,0.55),
+      0 0 22px 2px rgba(217,164,65,0.45);
+    animation: appel 2.6s ease-in-out infinite;
+  }
+  .village.cliquable .trou:active { transform: scale(0.94); }
+  @keyframes appel {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 4px rgba(217,164,65,0.35), 0 0 14px 2px rgba(217,164,65,0.25); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 5px rgba(217,164,65,0.75), 0 0 26px 6px rgba(217,164,65,0.55); }
+  }
+
+  .village.cliquable .indice {
+    position: absolute;
+    top: 100%;
+    margin-top: 6px;
+    font-size: 10.5px; letter-spacing: 0.06em;
+    color: var(--graine-1);
+    white-space: nowrap;
+    opacity: 0.85;
+  }
+
+  .graines {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    width: 68%;
+    height: 68%;
+    align-content: center;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+  }
+  .graine {
+    width: clamp(8px, 1.6vw, 13px);
+    height: clamp(8px, 1.6vw, 13px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, var(--graine-1), var(--graine-2) 60%, var(--graine-3) 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(0,0,0,0.4);
+    animation: poser 0.28s ease;
+  }
+  @keyframes poser {
+    from { transform: scale(0) translateY(-6px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .valeur-glyphe {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--terre);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .village:not(.vide) .valeur-glyphe { opacity: 1; transform: scale(1); }
+  .valeur-glyphe img { width: 11px; height: 11px; filter: brightness(0) invert(1); }
+
+  .trou.plein-clignote { animation: plein 0.5s ease 2; }
+  @keyframes plein {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(217,164,65,0.55); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(180,83,47,0.9); }
+  }
+
+  /* ---- Colonne vertébrale centrale : tableau de numération partagé ---- */
+  .colonne-vertebrale { margin: 4px 0 30px; }
+  .arete {
+    height: 7px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.1));
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 -1px 0 rgba(0,0,0,0.3) inset;
+    margin-bottom: 10px;
+  }
+  .legende-centrale {
+    display: flex;
+    gap: var(--ecart-trous);
+    justify-content: center;
+  }
+  .legende-item {
+    width: var(--largeur-trou);
+    text-align: center;
+    font-size: 9.5px; letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--graine-1);
+    opacity: 0.8;
+    line-height: 1.3;
+  }
+
+  /* ============ CONTROLES GLOBAUX ============ */
+  .controles-globales {
+    display: flex; justify-content: center; margin-top: 8px;
+  }
+  .btn-tout-vider {
+    font-size: 13px; letter-spacing: 0.1em;
+    color: var(--encre);
+    background: var(--blanc);
+    border: 1.5px solid var(--encre);
+    border-radius: 20px;
+    padding: 10px 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--encre);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn-tout-vider:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--encre); }
+  .btn-tout-vider:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--encre); }
+
+  /* ============ NOTE ============ */
+  .apropos {
+    max-width: 700px;
+    margin: 40px auto 0;
+    background: var(--papier-fonce);
+    border-left: 3px solid var(--terre);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px;
+    font-size: 14px; line-height: 1.7;
+    color: var(--encre-douce); font-style: italic;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 24px 44px;
+    font-size: 12px; letter-spacing: 0.08em;
+    color: var(--encre-douce);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="retour" href="index.html">← Retour au parcours</a>
+  <p class="surtitre">Kpo-awalé · Atelier 1 — composer les nombres</p>
+  <h1>Le kpo-awalé des nombres</h1>
+  <p class="soustitre">Deux rangées, sept villages chacune, face à face comme sur un vrai plateau. Clique dans le premier village — à droite — pour y déposer un pion. Quand un village atteint dix pions, ils se transforment en un seul pion posé dans le village suivant.</p>
+</header>
+
+<main>
+  <section class="regle">
+    <h2>La règle du jeu</h2>
+    <p>
+      Chaque rangée compte <strong>sept villages</strong>. On ne clique que dans le <strong>premier village</strong>, à droite&nbsp;: chaque clic y ajoute un pion.
+      Dès qu'un village compte <strong>dix pions</strong>, ils disparaissent et se changent en <strong>un seul pion</strong> déposé dans le village immédiatement à sa gauche — un village ne garde donc jamais plus de neuf pions.
+      Les sept villages suivent le tableau de numération gravé au centre du plateau&nbsp;: unités, dizaines, centaines, mille, dix mille, cent mille, million. En cliquant encore et encore, la rangée compose peu à peu un grand nombre, village après village.
+    </p>
+    <p>
+      Ce plateau est le premier atelier d'une série consacrée aux mathématiques africaines avec le kpo-awalé, ce jeu que les Bété de Côte d'Ivoire manient comme une véritable calculatrice à pions. Après la composition des nombres viendront l'addition, la soustraction, la multiplication et la division — chacune avec ses propres règles de pions.
+    </p>
+  </section>
+
+  <div class="plateau-enveloppe">
+    <div class="plateau">
+
+      <div class="lecture-panel" data-panel="0">
+        <div class="lecture-entete">
+          <span class="lecture-nom">Rangée A</span>
+          <button class="btn-vider" data-row="0">Vider la rangée</button>
+        </div>
+        <div class="lecture-corps">
+          <div class="lecture-africaine" data-lecture-africaine="0"></div>
+          <span class="lecture-egal">=</span>
+          <span class="lecture-arabe" data-lecture-arabe="0">0</span>
+        </div>
+        <p class="lecture-lettres" data-lecture-lettres="0">Zéro</p>
+      </div>
+
+      <div class="trous" data-trous="0"></div>
+
+      <div class="colonne-vertebrale">
+        <div class="arete"></div>
+        <div class="legende-centrale">
+          <span class="legende-item">million</span>
+          <span class="legende-item">cent mille</span>
+          <span class="legende-item">dix mille</span>
+          <span class="legende-item">mille</span>
+          <span class="legende-item">centaines</span>
+          <span class="legende-item">dizaines</span>
+          <span class="legende-item">unités</span>
+        </div>
+      </div>
+
+      <div class="trous" data-trous="1"></div>
+
+      <div class="lecture-panel" data-panel="1">
+        <div class="lecture-entete">
+          <span class="lecture-nom">Rangée B</span>
+          <button class="btn-vider" data-row="1">Vider la rangée</button>
+        </div>
+        <div class="lecture-corps">
+          <div class="lecture-africaine" data-lecture-africaine="1"></div>
+          <span class="lecture-egal">=</span>
+          <span class="lecture-arabe" data-lecture-arabe="1">0</span>
+        </div>
+        <p class="lecture-lettres" data-lecture-lettres="1">Zéro</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="controles-globales">
+    <button class="btn-tout-vider" id="vider-tout">Vider tout le plateau</button>
+  </div>
+
+  <p class="apropos">Le nom <strong>kpo-awalé</strong> vient du peuple bété de Côte d'Ivoire. Ici, chaque village ne peut contenir que neuf pions au maximum — un peu comme un chiffre isolé ne va jamais au-delà de 9. En chaînant sept villages selon le tableau de numération gravé au centre du plateau, une rangée peut composer n'importe quel nombre entier jusqu'à 9&nbsp;999&nbsp;999, lu à la fois en chiffres africains, en chiffres arabes et en toutes lettres.</p>
+</main>
+
+<footer>Kpo-awalé · Atelier 1 sur 5 — composer les nombres · suivront l'addition, la soustraction, la multiplication et la division</footer>
+
+<script>
+(function () {
+  var GLYPHES = [
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAALvklEQVR4nO1bf2ydZ3V+nvN+373XdpKS0oS1jZ0uhXbEomIE1t64mitNdEXAxhA3AnUbmgStqMSPliQ2Y9PnKyYSL1kYKT/WSZOQOk1djCY0kMaPicxq46QUqzBIoIDS2k7aNQw1aWL73vt97zn74/uu73WSxtf2tf+Zn38sf/6+8573ec973vOecwysYQ1rWMMa1rCGNfw/BVd3OCNKuwTntl993M2nDCNHFKCtlkbByg8RCfohGIUCVIzAX/t9AjCif8jhHijKZV1J7VbOAkpHHEZOGtCYwE3vePT1Lox/m+ZvgfANZv46gYMBFw0458S9ID55/vTxPecagowojQhGdi1A3NLQfgKiSFAesroZd/cd6gXwXkLvhdkdpLyeEgKUyz5UmCYw9ecB+SkE36PKv0+MPfyjuVdKJYeRkbYS0V4CSkdcfaV67j74HigfAuydEhQCmIdqDJg3GK6yz40gBHSkBCADmK8YwKNGfnXyqUe+3jSGAmiLn2gTAZbJoXXvHH47Jfy80L0TINRXYIaE9QmCC4xpBqMaYCQCcXkAhGl8zPvks2dODIym70XSvL2WijYQ0FCku3hgiOI+KxIEmsympkpK0zgKM2ta/ey5Ye4ZIQAa+8PMA4AEBWemMNNDk5XnBjH+j3E7tsTyCMgU2HJXdL3Ihn92YeFdPp42mClIV58CzBQgKYHQBUjnlz0GQLLxTGOYxuk2aSbPzKciusS08pRPZj945sRfnW3edkvB0gmIIkG5rNv69vckCL8pLn+HJtMxwOAypZ0EHTD1MI0nzfAMxX4Mw/Mkf5NxtFHBrTS7A+DvUYJtlACaVABT30QmAIsl6AxNa6cRx++ZeHrwZ8uxhCUSkJr9jTuiG8LChifF5X5Hk5kYYFjXEmYqQYdTX/Mgv07ia5UOffLl7+2Zvpbkrf1RAfGGogEfBvSDEuTzGs8qCM75D7NEgkKgGp8NkOw8fWxwcqk+YSkEEKUjsuP0K3Iu/+pRFxT6NJ5JQGZBlRlASNBBTWr/AbG/nnxq9/jc16UjDudOpuNu7k33ffPvTebc3be/VxAOUcIPqFYBNc18RDMJP10XFIqn7vn1TPPxu3IEZHuuu7j/sMut/7jGlxorb1CKEwMTqP/05PE9h+e+AdDi8UWUSgKUUCdja/HAX0DclwB0msZ135CSEK4LfHzpX6aOD9y/FH+wOALqk9/5t/c6l/+OJtUEzMJpM6MENHAaPnnf5Im9/4nSEYftJ23p4Ww9jC4nN9/5+TtdUPgWiRvMN5OARMLOIIlnP3Tm+J4nFkvCYgggEPGN910fVi9U/ltc7k3mY0tN0gxwCkqsPr7vzImBUex4LMT4g/Fip3xVZLK2Fvf9rkn+KGHrzZK6T1AygFrycljVN58en70ItL4VLo9HXxv9kQPKWrtQ/YgLu24zH/vGfqSKyznz1QfbPnkAGH8wxo4Hwonjn3kWWrsfdAKwblViGqsLu26Mc3wYKCv6h9w15TWhVQsgYHjjfYdztQuVk3S5baaxARCYeQk7nU+mH58aG/zztk++GZnsLcX9h4Jw3cMaT9ePSCUd1ZJfh1W77fT44IU0Ol3YClqzgP7IAbTqxdq9EnTcar6m6bdmFCc+qZwPfGEPEAnGX1yRWxsAYPyBBIiki4w0mTlLCQSAAhDTRF3QubmWc+9PdW7NClojIDuuqPqnIBv7y+jpCqTpl59/+lMvox9tic9fGzT0Q54bG7hoZgfo8kwvVhlMjfT3AwDuQUt6tLIFCMA29X9pXaE2fVok2GSWWPqYMKAqPnnzxNODE8AQV5YAoH7xuukd+64PwuCXoGyEaXaPIGE6w5i3Tjyz939a2QYLW0DpiABAIbn0VnG5TWZeARJmKi5Pmj418fRnXkC0GpMHABpKI/LiM3/5G4N9R1weMHgAhKoX19GpIe5MdR9ZcH4LE5BFaYR7KyVEw+RooACU7wIg/msRJ8pykepEM/nu/D9kOhne1qz7tdCy0qZ2+/yxIKYJPPSHAGwurF0NpPvblPas+qqBaL4sAbTbAKAVnRYmYE6I3dQUxRpAUY0Tqp8CgDT/t0ooDxkAdEp81lQvkcI0GDPCFARvbFWnhQnIhFC4EaZIHYuld3izafV4JX1xaPUIyHx3PFW7CNj5NL9IA0gzA8xel763sE9qfd/aFVlMkObDzurKnfsL4IYbbvLg1dLsV+r6WlgEAVptnJpMDc6Ql8rGfPpsaBWLLKmxnYlfzcFQuMoFs5r9bIMTLPUyG/J/07sHLRWsoEhnLPEmAEDUqvLtQEq2u47Xg9hoqkh1MiMFILJMU9QGAurHIDkxj1AzL5InzN4EAKt6DGaLIrHfJpLLI3VOrB+DZkgdc//COi1G6VPzTS0dTGh3L0b3tqCxKMX5sUkGwclWRS1MwGgqnF7HNano3JlLiGkMAH+IUslhdGj1nGFdJ9i7s6w5m3Wiyg8ApMXWBdCCBZQVACd6tv3CYM9RQmLuBhYrXb63++zbdwJspL5WEqWSA4asu+9QLyQoWiMQUtKJ+tpLce3ijwAAIyNtOgb7ozTNZPjWPJMzKEVAw6fRplLVgji3Pd3rvvaIuLzL7gGpLi5nJL/90nh5Bv1R0IpOrRGQXS3N9HH1Vd+0DQJNKkqX++MtxX2/j5FdfkWtoFRyGC0nW+7a/xYGuT/TZFabwmAxTajGrwFoKQwGWiWgXFZEkZw5MfgTaPJ9cQXWS1aoZwYYfnXLXX/XgezX1mfVMpiufiSke4x0YXYNJsw8gxzN18bPHN/9JBC1XE5v/RQ4lcUDxOesfuqkaon5mrqgsF0k+QeM7PJpNqatJBA7HgswWk56il0HXdhRtKQyr2JEChX4m/S63Nvy2ItMi6clqJ7i8L9K2LlrXkHEkEjYEWgyOzw5tncQUZSSu+wOj0hQ6iVGdvme4vCABB3703S81dPxXoIO5/3M96fGBv9gsWWyxQUvI9sNiEQtfkST6iuUsJ6TS/1BXEkk6Bzo7jtwGOVyWg/oj4KlWYMx/basGNnlt+48+DkJOvarr/i5ycMMdFCNKw58CACxfftKV4bqFeF9fxLkuv5N42oCmpuTlRUq1FeOUvHQxPHdP0+/q1eHStdogsraYYC5qtAtxQNb1cmjIvn3ajzjMe/uj1iCrlBrFz8yeWLwn1a+MlRHfxRgtJx0F/cNudyGSOPpGEA493dDIkE+UE2mAfy9We4rU2Mff3GejFLJzXWLbT5ll5vtb939xU15jT8KcDdduFGT2SurxOG60NcuPTp1fOATdZ0WO5WlO6pswJ7i8Fdcbv3HfO1SZglzFVwPSloaTyqvGPENM3wD8D+cGht48WoitxUPbPaCHQb+EcD3i8tvVl8B1DdN3gxA4sL1oY8vPTE5tvdDy2mbWY6nJkpHJC2UDg+7sGuvJrOX1/PTLghxLk1eKjSpXQTtBTM7A2S3NmIjTG4G7RZxudeRDuarMPV+XltNSiol7BSNZx6bHNv9MZR2yXJ6C5d7VBFRRJTL2lM8+ABEvijiClnRtKnVxQxGDxghzpEu5ajeLmQpT2YJoKoAdJ41wQwGLy4fmKk36ODksd0Hm3uTlj6BdiBzPj13Db+NLjhMl+8zrcF8fJU+ITMYLesjqOcb00InrdEEARgMllafAkeXh/ras2bxJ6fGBp5sV7dY+4KVhhNiz92HPkqzvXS5W2EK9VXAUHdQkk30MgGGlJjGsUqXA+mgPp6i4QsT5y98GafKtaU6vKuhzSFro03lDXcc6MqtY4ngh0HtE1cIgdRFwHx6n7JGs1iayRFQ0hYjTSpK8oQaH5fpC09M/Lh8HkDbmyVXJo932Xl8y84v3O6p9wjQp6a9gN1MYANghSy/WCXxKsCXQP4M4DEDj04de+TkZTLb1iBZx0omMrNT4srA5/adw+svhXZdzgedACDELKvhhV/94JOvXiGjP8qSLSvTQb5Kmdys1SVtgrr2KtabqEahq1FrXOX/F6jDeGUaffEdXmtYwxrWsIY1LA//B27v7ixQzUt5AAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB8klEQVR4nO2bP4sTURRHz31vNtnsGhDBFcFVWexSiqhY2OhHiJ0fwzoEC/8sVn4EK40WgoWNX0DQUizEThQEUdCgiXnXYlaxmNb3E72nGsjAnJx586a5A0EQBMH/i+ku7cZ4lgCYjQuY61yq4x3hJ6m+h2YFGOCHT042mv7+C8lo8td3T14/u/Hp5281ZSpXnyRwjp2+dnytP3yam+ah5ebBarD1fPvc9VF7St2VUDfAeGRgXnLazWubo7KcL8pyvrC8vkNJt6l896HuI7C3vN22z958mXLvhJcl4GbWePHV++8Hvuy8fTSdU/FRqLkCvN38zM34iFnCf/3JBJTybV/1PUmy89J5d7veDH8eVYC/hgigFlATAdQCaiKAWkBNBFALqIkAagE1EUAtoCYCqAXURAC1gJoIoBZQEwHUAmoigFpATQRQC6iJAGoBNRFALaAmAqgF1EQAtYCaCKAWUBMB1AJqIoBaQI0mgFEk1+2gcoDkAO6sd81KlsXnf3pS1NppUDdggLOirVCAlbmVg1ssKvoAtWeFz0/y3pchd1KzkS2lxsg59YYZuPtiNl0wvpepODUumM91Y3wpHX1z6iqWL5t7Lub3+8PelVePPyxh6gjG5iUcOXNrcOji7qbaQ0O71H8/Fn7ApcNUY/JBEADwA4r/c7tXVTFdAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADLklEQVR4nO2avW4TQRSFz5lZ2yQhIAqM+AsNEkVEgRBKCIUp4BFMR4toKRKgwbJoYhAS4hWowDwAggYkSOgoICkQNAECpIACA2HXM5fCCZjEOCRe+0owX2FZ1nrmzLczd7e4QCAQCAT+X7j2JSWDAgzyw5L67Aszjfm7NfZxeJTLfuODlEomvURatF9Dmx0gBCi7xioHMiZ3SFzymcZ1YLMZC8ABQJ+IIem/Nv3WOULC5La4+uLMmycXni2vpdWlrQUUixbVqhs6WjkDm71hTJSDeKS9T7k0vaQ8Mpc+RbwXH1+cm5q4glLJtDoOLQSUDFD2O49NDmXEviJNJFJPIOzCcVhe+F+Uoo0MbhiRFs65g2+mx5+3khCt+ltxmKgCGY+DjLKR1L/XQWa6k7Erg/7C+4SZTZYSHwbwHA9gAKwhoDojAOA8X1ifADRG4BIK00tLWLRavaCe1hRCEZJGxBvxdhYAkJ9dddba14DRyiWT7S+nfae8WwRk5XEkTNSX6jwA4ZPa9bnp8+fWUQOWaVTOPaOVgokyIyLOQnyHJkhAhMBZmmivOOdBIWnpvasBuAYible1/24aI2TkxSdPX09N3ENjnet4CvykURA3HOQP7BurPILNHZN67EAxZESBm597PLE77bnWkrm6BvxG2aN42xYWZvgwjSy1XcTmeZEEmZXmRcRsOzG59VPy7Qtq74jNOzt6NhYAPMwPC6ps+3LR5TK8ksbdGBqrPKHNjTTvAC/19/GA2f/h/vgXtNmyafMPvOp2RhCgHUCbIEA7gDZBgHYAbYIA7QDaBAHaAbQJArQDaBMEaAfQJgjQDqBNEKAdQJsgQDuANkGAdgBtggDtANoEAdoBtAkCtANoEwRoB9AmCNAOoE0QoB1AGx0BROqdZxulxwKMAIAINrXqgfJxrcdNW70VwEaXmBBAHwQODQsegKPQb88j7mEeAL0VICiU7FLT4k0T9VsaExHWmuygBXBrtlqOUbxt0aMWOaDnfYIAIETxlBl6e+QyaE9TxHrKndxgdvzl3Y8JUBb0UIAqe0av9e04eXVAO4cOja3e/F1hN+qzXBQDgYAOPwCGlxVZTcs9hgAAAABJRU5ErkJggg==", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEQklEQVR4nO2bz28bRRzF35tZ20matvQS1BSChBBIhIAgh+ZH1SDUK0f3T0AcQKhITUFCGIsDdVUkhLjwL2SP3IADETQtqgSibSKExIGkSpoWShB26nh35sthk5A4jtPEa4a08zlY8mp3vm/e7nx3Dm8Bj8fj8Ty8cOdTCgpjUOjpl9Sr355O6rdr7JdhUSzavQ9SKKj0FLmi+RyaPAFCgNI7Unomo3Ivion+pjItuLkRDcAAQKeIImmXNxxrHSGhcodMXJ2+eeWd62tzaXRqYwPyeY0wNH3Dpdegs58qFeQgFmk/p1wtLymPzNVfEWvF1t6dnRq/gEJBNVoODQwoKKBoj46e78uI/pVUgUgcQdiG5bA28ftoRXsZXDEgNYwxAzcvn73RyIRgy2X5fiIEMhYDDLKBxCsxyEx7NLZl0H+xNmKmQ1NqgwBu4BsoADsYEE4LABjLX7SNAColMBGF6aklNBrNXhCnVUIoQlKJWCVWzwAAema2rLXmPWCo9L7KdhXTvlPWVAGpX46ECjpTrQMQNip/Mnv53Jld9IA1ks752FBpTAWZ4yJGQ2yLTpCACIHXqYLHxRgLCklNa00ZwMcgas269v2VUUIGVmz049zU+JdI5rmLt8A6SUPcs5BteGKk9B10blTimgFFkQEFZn720vixtGvtZObWHrCJokV+Qo/dnuZkGlrKvUT3vEiETL3zIqKOnDp/+M/oXgXlBaL7aEvvxjEAkz39gpBNNxdtbsP1JHejb6R0hTp3fOMTYCW+VTugnlr86mwFTR7ZtHkAtrqt4Q1wLcA13gDXAlzjDXAtwDXeANcCXOMNcC3ANd4A1wJc4w1wLcA13gDXAlzjDXAtwDXeANcCXOMNcC3ANd4A1wJc4w1wLcA13gDXAlzjDXAtwDUPvQE7JESEyIcK4WkLFFIIU4QECtsGH+KKVUksZ4bAsy0GJIqC/IRCmLfNIjL/cUIkoW+0NEWVG65LiCzMXRo/BrYQjtqe3YakVqMsJz46QnR8CNghsXEFoG022C6EvATyEEQkOUYIpEbB9yBMizUAgITuFoWfQL43++3bC9uFpRoZQKDAwcFefSe39LXOPnLSxstgiklZa6PGOUGdTa2GiIUKOmFqf11fKavhxWvle0BRUGdsg6hsXiEsmjuZC8PUHSdNbSkCqJKblRKJm3XmC2xcTSkuDoBkvFKLdKZrIHuw+gpQ/AL5CY3w9KYaDZpgHkAIkLkNB1W63ULWfzaLTvetxHWTTRJBXftAY/M5ja4TPPr8xa7sAftDkD34tI0r25z6f0ZA3QUTL98yUcdz81ffuLs6hx2WACDAB2rxWrHSe+Liq8pUPxOoFyBxgDQD0+2EIoA2sLWflcRvzV198w/g9y1JcaD5bV3vxE+e+vxwXL27rzZN1B3y2+SZpeTfnrPHBZVcvF8RtvDNUP1A+5G2bKo8ngeJfwC075q2EIbfuAAAAABJRU5ErkJggg==", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADSklEQVR4nO2bu4skVRSHv3OqultHXDOFYZlgAwWXVRYU3FUYA1PBZEAwNxURHxuVnQgzbCBi4t/Q8ebbBqORwT7ExMBlYX2zsKz2dN17j0HXLI5d/ahxem4Nc7+goKrrFr/66p5bHZyCRCKRSJxeZPEphbKJ8vR5W32cI+TX28LrBPr9cPiLFIUeXaJYzL+HOTPABMTWL28/19HeRfPlA1H/P2weIyaC9s54N7p999tPbu7fS92p9QK2tjIGA79xaftdsu4XqnkPC5yUGpBqaxaChfGVO7sf7VAUWlcONQIKhX449+rnG87KH0U0N3MlJietHAyRXDTHe3fh7jcf3qqTkE8N2zovDMDL+HnRXm5u5BHpLLNcto9Qiua5+vFF4BbXUWCBAAYAuHF2P+96Q/jvkw8YbV0LBCF7tGcik2P19Q+1AvYvFQwygX+XviHaUdFuK8vBzGF+j6Xe7hWzBUxdnSBZV4Mb76LlNTNUpB0zYT+LIC+Ldt8yX4aamVvL8gIgiHZVGH99Z/fjzw6ZdaVsvLL9juSdiQCOXgBgGKyxWeTVWNc45WrIAWelnaHhy7qhABAhMOw7NgsY9tshoMoil7Z906GtXMyOkyQgdoDYJAGxA8QmCYgdIDZJQOwAsUkCYgeITRIQO0BskoDYAWKTBMQOEJskIHaA2CQBsQPEJgmIHSA2SUDsALFJAmIHiE0SEDtAbJKA2AFic+oFNG6QwEygUH5DF7WhHhtVFpt0hTWisQBDSugHvmfcdOzK2M+iO3tNhy4vQMiCHyEqb29c3nmJSS9aW7pnJ1nM1oPf40Cv4AJmChCdaoETzCOSnxXNzx426Sox81hw0KBRcPYMsLAGuVVd1tUFBTNn5lwr+gOnEBGmF3ZjztpQI2ALGJApimQCYwciB2b7kk2Ix4892lRVEUByxP6aNaLOjIDxzAtX13pPhO+y7pPPBvdwxqltxpDscbz7+2fXkQv3hh/8MTl+sG+4rgQMPtVfbvQfrr929U3xoy8NfRFz+byp1CrEDDJPKH9Qc+/dG175HR4oLPW9wIHfDODcG1895UZ/tnTa1yPZY/bT8P37k73ZX4wsoNDJ4JNK9adtDkve3EmVcKinnkicJv4BgGcShk2aapcAAAAASUVORK5CYII=",
+    "data:image/png;base64,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", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADsUlEQVR4nO2bP2wbVRzHP993VycETNWliCgENRIgpRIMoFaNkCqkjsCEK1YkBAMDU4HN9dY22WBhYo83VpDKwoIEA1KZEEhsLRJSktr4z937MZxdSmM7ti/Os+l9pJN81t173/e95/d833cHBQUF/yMUWkAYKrsR/cZXdiOwx8mIfxt7+fLteNKzF9ypqoOaX7904x3c0jWwM8hux8vdT3779rN9MEA2qoSJHZsbKpWIei19fuvmG0TLdQHmu7i4/EK3ubcK9jZcF5kLQ3Eno3YG3NsUgDfelyLzSatt5n3a3kslvfnc1vYG1HzWS4azuAacPd+/sj4bBxQBDhGBLIUyANXRxSyuAffuCEBO9wcMZZLDj1PM4hrQx/K1YfENyElhQGgBoSkMCC0gNIUBoQWEpjAgtIDQFAaEFhCawoDQAkJTGBBaQGiOMMDUi5yzz/O03V8VmMzyReCjQlGBjDppb3dkuHji/EgXPkRsJ3mKGWJAFjdvXNo+m7johswuGEkTxouZTgYJzAx/zqctsixwcgYZIIDNzd3SAb9/HZ8qX/RJE2kpl9xZIZ9ilsKUaxyHDajsOupX04MzOxecW76YdPa6QhE2Ol8PhsxlvWE6ho4B8t0SikymCOEe8teOWGs4YfItbg0woA6AJz6IMGVj30OVSJry5zYTDA82/QUZ2gPM4w63U2C+6fH72U7QriDAhJ4GrUwrZfy1QSNxp56IrdP4ql12n3YsjUuKck1BeejXv9Twn7t45T3fbSZo8rXOiU8wWefuN9cazEkPWN+62clTyBR/hSVAvPpB3BMRZntQ//QzAEy/PG489awRsgccU/3FzVBoAaEpDAgtIDSFAaEFhKYwILSA0BQGhBYQmsfegMnvBcwEVcefuKOewpwpvfpnGYsPxFAXap5fyHUbmpte/dKtbp5ixjdARD5tIad317duvcac5AFm9tJxx+JZ6YcfNRWWIsVrcvHaNJXNAvMJZgnT5gLDe4D5FYiN/6SiwiwxS5L5WSARg2Jxw6KxDBlgQAWoEzkcigSdpLcK80il80Q/FpZhZojI1P57nDMHuSQwnnl5Z2XpSf9TVCq/6JPGkEPnDDNcqUza3vvuj7VzV6jfseydgeEM+gkYXHd3f641Vl/feUtp6wvDvYIlMZYvf5sZIovHFCVpp/G9En1E/Wo6zjQ9qkEPRvmNK1+eTlp/zVm3f5TTlDrd9NcfPt7vfXEcs1TVLdwraNXJNI954CKZMGfPMRQUzDf/ANYxVzIsZ2DgAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEVklEQVR4nO2bzYscRRjGn/et7l5dJAiCmCgTchA/lhUWCdmNwnhNTl7GS+6CF0XExJya8WJmg5j4Z2RO/geZy7oXT8mKKCKuKytrhMBC3J3uqsdDz6zsZL56dibVQ/oHM9AzXTVPPVVv99TbVUBJSUlJydOLjD4lVlSheHGJs5czRfa2BO/BoV53k1cSxzo9Rb4Y3oYhI4ACCM9cbLwW6sIKbbIvak/g5hOEItCFUzY92NrZ/OJety39Tu1vQK1m0GzaylrjQ5joW9VgAXSYlxiQzjvpHF37+vbG1XXEsfYLhz4GxArU3el3blRCml9FNCDTBJR5CwdCJBANYG26vPP95/f7mRA8Vqy2JGgCocOyBFHA9DCFSDjO5bJ4uEQ0CNS2VwDcx10ogBEGNLcIANbJz8YlgKgSNhHKPFggEJijo0yzQPrHP9DPANQdajXzZ/PaL5XVRqzRYh2Yj+FPpqA9xFh39w59DADQbFqAsr0pX76y2mhpEF4grQFdIUcBCRWBE8h50eh92sRBMFan9TcAQHbbiHVn81oLQGtKWmdKZbVxRYIwMwAnNgDIwuGOqe5tScEdCACkTHgKOW/WIwwA0PzAFrzxQDUGWvVU1ho2b9G5uLjNktIA3wJ8UxrgW4BvSgN8C/BNaYBvAb4pDfAtwDej5wJHxIraUiGnw9jfNajdIf/4LXeHjmdAN5fWzC3tSZFNglbXH+UtOIYBFNTFvXyh8Wq4EL3BtL2fWsfODDTv780EqhpxzkLxFujQSYOPVXa4AXGsqIurrN34GCa6CZoIGiE4Gmg5ImjWGAB0cPYQEDEjz+8wpAXZsK+8e/NNgd4GLZxN0nFTTX6gAPmSt4MbU+1852RFNAJpEwiCTpmCvvJnrgePgO7DUKYPyRCgaE9YORBFe1R2PC0+BiODWIz2STMRopGKhoUKh+mlxY/V6qS350Ujda59V2yyAaGC4nckdDQQXFETXqJLp5UV7gMzA8Dku+2Nq7dyl58hldXGFdHoEm06jecCwyDo+ByqcYBi/CGYYVp8ACJwaNXTbkp60nqmQpkWn5zSAN8CfFMa4FuAb0oDfAvwTWmAbwG+OUFKRwSIFX9DRy1HnTkdDZxgJdvEBhBsA3WHH9GetI6p0dWg64d5i+Y3QGCcPYAAH1Uurl9GNvn2vYo200CeyXKC4ydFRidEFK6ndQJaqIbnRMy53FJnCGlBlwI5MiIjDaDTRWhvDwvoUkcmvnv+OCKCxy/sxJBrw2AD9rYEAOgQqDFC0GYrRo/aLOjNFXmHR2+dqHCABBAOfGAyYr8AcPrtr18IFnjPBIsv0T4aXqRQEGKehU3//SsNZXm39dk/2efH1w2PXCm6+0P9wdm1ry7TtW+T8jpgzbAhVQiEBIyFS35Spp/stq4/APYVGGu/QC//77Y4W/3medqDYje+g5hn+Hvr04fZ0eAdI2MSazck5gvKCfYMDapwnjhRr5eUPA38B3/1obEKN+vEAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEWElEQVR4nO2bvW8cRRjGn+edvTtslNCBsMIVKUAiCsgSRHZAOoQoQaIxQqKnjVDEh6vlCiLdKQVCUPAvcLRIlDGFSUUBCaIBRAgy34piJbFvZ+al2DvL9u19zMXnXeP9FSvd3s7q2WfnnZ19dhcoKSkpKTm+cPwmsaABwcNndPZyDpA/rxMvwKPZ9NPvJI7l4BTlxehjGNEDlAB14XzriYrUFtUlmxR3H24eIkpCaied3bp+8+p73/WPJWvTbANWVgw6HVdfbr0JU/1IJKpBPY5KDbC3VPVefXf1xvo7bcSxZJVDhgGxAE1/+rkP61aTH0mJVG0C5VErBwUZUSI4Z8/e/Prta1kmRAPNVs4QHcCx+ySlFqndciArkwyXxcMnlCgS110EcA1XIADGGIAOAMB2za2o6hTE/jPvoSjqWEAQZueXkum67PoHMg3o78orYAjsLn0FpSKUaiHLQdVC3TYmurr3GG7AwN7haaribXcdknyhCiGL0RP6Wgg+S6m+qi7xGT03k8kNADylKkT3qxvr716aUutMqS+13mBUSQ3AwRsAQKHAPBpx1Gtrg1XOhgiA1URPIvBiHWgAQMJjrWnRiIG1ZjEM6GnhcsuFNi3kYHaYlAbkLSBvSgPyFpA3pQF5C8ib0oC8BeTNsTcgeCqsCtm5F2jEM5A0FREaMTRRM37T/Q2DIAjc7d0DFOM+IMUCAJdat0OyACDEAELUdwHhi/Xl9gegCpSFyAP6WhS6qL6LSbMAYIQBpOy/rxT1XVAq5yjVc1OLnSG7EqH7N0DgKkBl31pCvfXqbDHO/CAEGTQOZBiwAqADRJgDCSg1Lf0dJKSLFZ2hqbC35raJPEDlvoFFERq7HBpKgEGj4NASUPUEBnsTKQRNMZ8SqIdqWCgUkAqrk2jOuOTe516TT1TE0PvgCGoW9LWIMS8bU7vo04c5E40FAfMAKmgA4qffrq5emVLrTHlsqV1HJBj2IDSL4FSYyhpWPjPY3Ihw4tFiTIb6Wn79eT60afBUGFRF5zWHRkx8eaEQJdDXwuVW8OX5f3M5m5bSgLwF5E1pQN4C8qY0IG8BeVMakLeAvDn2BoRPhVUJxIK/IONeQz00elpUw7IAYJpYHEyApsf36Ia2nRl9LdLeDm0akgob77ZA4ev18+1nkMZERUmGUi2qC95tY8+7gmMYngrLwCtwhDqQ0SlKdGpapbNE1UF9+ohg0jbDe4D6eSDSXrjQ2yGhalVtQVNhkhgc2BUjxoahqbARSJr9dW0aNO7q7YVNhXVn0asKDzAC9e6wFlnOEFA88tTl+dqD/htTPfG4t3eGbFpkFDRzcPbe77bCsxtrF/9J1++Ny7JKQIH35Y9vm3cWnr/8Ct3Wxwp5GmqjUV2pUFAVMA4++UHUXthYW/0b2BRgou8F9vynAHD6pU8fslv/FrTbZ0PzgP6y9tat9NfwL0bGEEva+KjSm7SNYMKDO6omTHXWS0qOE/8B/XWL09LUkuAAAAAASUVORK5CYII=", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEb0lEQVR4nO2bzW8bRRjGn/fd8TpNaRCXUiJkpB5AIiqoRIgkRA0HjiC4uJfeOJQjqio+etqukECOKgEVl/In4AsX7phDaA/lAA3igkSqSAUCKFJJ7Xhn5uWw66ZJ1h/r2tmJuj9pbXm1M37m8Xx4n90FCgoKCgoeXaj/IQFjCYzjMzJ+OSPkr1XCa7AIQzt8JUHAo1OUF73b0KMHCAEk0wu150pcPi0muktsHsLNA0SIwOUpo1ur69c/+rnTlrRD0w2oVj3U66YyXzsPz7/KrMoQi8MyBih5FbFWbPvS7ZUPlhEEnDYcUgwIGAjtyVc/r2iJfiNiJaIjCB224SAgUsQKxuhT6z+8fyvNBLWvWHWGUAcMtZ8nLivRLQOi0iDTpXvYiFgpNu3TAG7hOzCAPgagDgDQbW9T+UZA2PvLWwhcnQsIBO/+JyGK96WPfyDVgE5VVgCPgAeHvoC4xMS+k8NBREPMNgZa3RO6G7CvdljyfLa6vQKOvhUBE7nREzpaCPQysf+2mMim9NxUBjcAsMQ+E9rf31758JMhtY6VylztHKlSbABGbwAAgQCTWApUUlZnVjkeFAAtkUwh42Kd0QCACBaNUGMpABqhGwYkWmi+ZrIWdXIyO0gKA/IWkDeFAXkLyJvCgLwF5E1hQN4C8ia7ASIECOG/6fjdhS3RIiKZU4theoAGSHDz3SjO2RzYEi1MFGVtzODnAgTPmhaE6FxlobYIEAHiSEwYa7GC42S2sSsU6UNXA4j3nesTxIJZnQB7J4bWOkZILMRqIEMi0tUAsfooPJV0s50KRbRAOxqPEwgZh3WKAVUAdSgFgDwStDXtdZTE0dUje3K734D6WQsEbIx/g21zVflTM1ZvDVX5QSMQQLJ1zrQhIABo/frF5jOvfPaGMc0vCPSSFePFy46TdMLbSQJnSoW6zAGhBUBrNy78DuCtp+e+PhIdW2NXe0FbjPLJ0+UteYfVxFUbNTVosBWu10ECBIwAWA/PNkekdVwQAKks1DLr7ONSaBF2vmDXYuAWs+cVbn6lxcrA63+HQf8IibONB4DHnhIAQj2uAHXD0eXs4CgMyFtA3hQG5C0gbwoD8haQN4UBeQvIm8KAvAXkTZ9zASFU65yEJO6eDGyAgYAlvissE30MIEEdyV0XoSMJcAq/oA0A4OXtrEW7GBDfW1tZ/PQJwsTHgJ0Tq7cAsthJX1wi1iQybUcQixNwmWZnr6kNu/kN+5NnrL4H9iZGJ3dMiJgRxOLVKqMemo3S8jx5E2dMezMCiMWVayC9IEqLxQU95oausTiIyg/sZJfzkB3k/ksyKixACiT3upVIaxYBgidfuDLpH7U/Kv/Ys4clFt+NgLwjMLr5hy7RqTuNi//E+3enRl1i8cv850/h1vTilTfZtL4U8IsQrXp1JacgEcAzsNGvLPq9O41LfwN3OUm7dx/aqxok3enk69ce161/D9WfJvImZK1xYTP+1P2JkT4E7PDFkAEQeohnhvZWdBgZ6lcvKHiU+B8q8dr4qlNS4wAAAABJRU5ErkJggg=="
+  ];
+  var MAX_VILLAGES = 7;
+  var MAX_VALEUR = Math.pow(10, MAX_VILLAGES) - 1;
+
+  var etat = { rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ] };
+
+  function creerImg(chiffre, classe) {
+    var img = document.createElement('img');
+    img.src = GLYPHES[chiffre];
+    img.alt = String(chiffre);
+    if (classe) img.className = classe;
+    return img;
+  }
+
+  // ---- Nombre en toutes lettres (français, 0 à 9 999 999) ----
+  var UNITES = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf',
+    'dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
+  var DIZAINES = { 2:'vingt', 3:'trente', 4:'quarante', 5:'cinquante', 6:'soixante', 8:'quatre-vingt' };
+
+  function deuxChiffresEnLettres(n, dernier) {
+    if (n < 20) return UNITES[n];
+    var dizaine = Math.floor(n / 10);
+    var unite = n % 10;
+    if (dizaine === 7 || dizaine === 9) {
+      var base = dizaine === 7 ? 'soixante' : 'quatre-vingt';
+      var reste = 10 + unite;
+      if (unite === 1 && dizaine === 7) return base + '-et-' + UNITES[reste];
+      return base + '-' + UNITES[reste];
+    }
+    var motDizaine = DIZAINES[dizaine];
+    if (unite === 0) return (dizaine === 8 && dernier) ? motDizaine + 's' : motDizaine;
+    if (unite === 1 && dizaine !== 8) return motDizaine + '-et-un';
+    return motDizaine + '-' + UNITES[unite];
+  }
+
+  // dernier = ce groupe de trois chiffres est-il la toute fin du nombre
+  // (sinon, un mot comme « mille » ou « million » le suit, et « cent »/« quatre-vingts » perdent leur s)
+  function troisChiffresEnLettres(n, dernier) {
+    var centaines = Math.floor(n / 100);
+    var reste = n % 100;
+    var mot = '';
+    if (centaines > 0) {
+      mot += centaines === 1 ? 'cent' : UNITES[centaines] + ' cent';
+      if (centaines > 1 && reste === 0 && dernier) mot += 's';
+    }
+    if (reste > 0) {
+      if (mot) mot += ' ';
+      mot += deuxChiffresEnLettres(reste, dernier);
+    }
+    return mot;
+  }
+
+  function nombreEnLettres(n) {
+    if (n === 0) return 'zéro';
+    var parties = [];
+    var millions = Math.floor(n / 1000000);
+    var apresMillions = n % 1000000;
+    var milliers = Math.floor(apresMillions / 1000);
+    var unites3 = apresMillions % 1000;
+
+    if (millions > 0) {
+      parties.push(troisChiffresEnLettres(millions, false) + ' ' + (millions > 1 ? 'millions' : 'million'));
+    }
+    if (milliers > 0) {
+      parties.push(milliers === 1 ? 'mille' : troisChiffresEnLettres(milliers, false) + ' mille');
+    }
+    if (unites3 > 0 || parties.length === 0) {
+      parties.push(troisChiffresEnLettres(unites3, true));
+    }
+    var texte = parties.join(' ').replace(/\s+/g, ' ').trim();
+    return texte.charAt(0).toUpperCase() + texte.slice(1);
+  }
+
+  function construirePlateau() {
+    for (var r = 0; r < 2; r++) {
+      var conteneur = document.querySelector('.trous[data-trous="' + r + '"]');
+      conteneur.innerHTML = '';
+      for (var pos = MAX_VILLAGES; pos >= 1; pos--) {
+        var villageEl = document.createElement('div');
+        villageEl.className = 'village' + (pos === 1 ? ' cliquable' : '');
+        villageEl.dataset.pos = pos;
+
+        var trou = document.createElement('div');
+        trou.className = 'trou';
+
+        var graines = document.createElement('div');
+        graines.className = 'graines';
+        trou.appendChild(graines);
+
+        var valeurGlyphe = document.createElement('div');
+        valeurGlyphe.className = 'valeur-glyphe';
+        valeurGlyphe.appendChild(creerImg(0));
+        trou.appendChild(valeurGlyphe);
+
+        villageEl.appendChild(trou);
+
+        if (pos === 1) {
+          var indice = document.createElement('span');
+          indice.className = 'indice';
+          indice.textContent = 'clique ici';
+          villageEl.appendChild(indice);
+          trou.addEventListener('click', function (row) {
+            return function () { ajouterPion(row); };
+          }(r));
+        }
+
+        conteneur.appendChild(villageEl);
+      }
+    }
+  }
+
+  function valeurTotale(row) {
+    var total = 0;
+    for (var i = 0; i < row.length; i++) total += row[i] * Math.pow(10, i);
+    return total;
+  }
+
+  function ajouterPion(r) {
+    var row = etat.rows[r];
+    if (valeurTotale(row) >= MAX_VALEUR) {
+      signalerPlein(r);
+      return;
+    }
+    var i = 0;
+    row[i]++;
+    while (row[i] === 10) {
+      row[i] = 0;
+      i++;
+      row[i]++;
+    }
+    rendreRangee(r);
+  }
+
+  function viderRangee(r) {
+    etat.rows[r] = new Array(MAX_VILLAGES).fill(0);
+    rendreRangee(r);
+  }
+
+  function signalerPlein(r) {
+    var trou = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="7"] .trou');
+    trou.classList.add('plein-clignote');
+    setTimeout(function () { trou.classList.remove('plein-clignote'); }, 1000);
+  }
+
+  function rendreRangee(r) {
+    var row = etat.rows[r];
+    for (var pos = 1; pos <= MAX_VILLAGES; pos++) {
+      var idx = pos - 1;
+      var compte = row[idx];
+      var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
+      villageEl.classList.toggle('vide', compte === 0);
+
+      var graines = villageEl.querySelector('.graines');
+      graines.innerHTML = '';
+      for (var s = 0; s < compte; s++) {
+        var grain = document.createElement('span');
+        grain.className = 'graine';
+        graines.appendChild(grain);
+      }
+
+      var valeurImg = villageEl.querySelector('.valeur-glyphe img');
+      valeurImg.src = GLYPHES[compte];
+      valeurImg.alt = String(compte);
+    }
+
+    var digitsGaucheADroite = row.slice().reverse();
+
+    var lectureAfricaine = document.querySelector('[data-lecture-africaine="' + r + '"]');
+    lectureAfricaine.innerHTML = '';
+    digitsGaucheADroite.forEach(function (d) {
+      lectureAfricaine.appendChild(creerImg(d));
+    });
+
+    var valeur = valeurTotale(row);
+    document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = valeur.toLocaleString('fr-FR');
+    document.querySelector('[data-lecture-lettres="' + r + '"]').textContent = nombreEnLettres(valeur);
+  }
+
+  document.querySelectorAll('.btn-vider').forEach(function (btn) {
+    btn.addEventListener('click', function () { viderRangee(Number(btn.dataset.row)); });
+  });
+  document.getElementById('vider-tout').addEventListener('click', function () {
+    viderRangee(0);
+    viderRangee(1);
+  });
+
+  construirePlateau();
+  rendreRangee(0);
+  rendreRangee(1);
+})();
+</script>
+
+</body>
+</html>
