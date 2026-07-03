@@ -14,6 +14,7 @@ de numération africain à logique constructive.
 | 4 | `calculatrice-africaine.html` | Calculatrice à double écran (africain + conversion arabe) |
 | Atelier 1 | `awale-composer-les-nombres.html` | Kpo-awalé : composer des nombres avec des pions (report de dix en un) |
 | Atelier 2 | `kpo-awale-addition.html` | Kpo-awalé : additionner deux nombres (composition libre, association, conversion à gauche) |
+| Atelier 3 | `kpo-awale-soustraction.html` | Kpo-awalé : soustraire deux nombres (composition libre, retrait village par village, conversion à droite/emprunt) |
 
 ## Utilisation
 
