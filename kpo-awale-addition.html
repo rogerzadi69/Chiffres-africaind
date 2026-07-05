@@ -284,7 +284,7 @@
 
   .message {
     text-align: center; font-size: 13.5px; color: var(--alerte); font-style: italic;
-    min-height: 20px; margin-top: 4px;
+    min-height: 20px; margin-top: 4px; max-width: 640px;
   }
 
   .succes-final {
@@ -409,6 +409,7 @@
   ];
   var MAX_VILLAGES = 7;
   var MAX_COMPOSITION = 9;
+  var MAX_VALEUR = Math.pow(10, MAX_VILLAGES) - 1;
 
   var etat = {
     phase: 'composition', // composition | association | conversion
@@ -518,10 +519,10 @@
     }
   }
 
-  function afficherMessage(texte) {
+  function afficherMessage(texte, duree) {
     var el = document.getElementById('message');
     el.textContent = texte;
-    if (texte) setTimeout(function () { if (el.textContent === texte) el.textContent = ''; }, 2600);
+    if (texte) setTimeout(function () { if (el.textContent === texte) el.textContent = ''; }, duree || 2600);
   }
 
   function flashPlein(r, pos) {
@@ -690,7 +691,15 @@
   }
 
   document.getElementById('btn-vers-association').addEventListener('click', function () {
-    etat.sommeAttendue = valeurTotale(etat.rows[0]) + valeurTotale(etat.rows[1]);
+    var somme = valeurTotale(etat.rows[0]) + valeurTotale(etat.rows[1]);
+    if (somme > MAX_VALEUR) {
+      afficherMessage(
+        'Impossible de continuer : cette somme (' + somme.toLocaleString('fr-FR') + ') dépasserait la capacité du plateau (9 999 999 au maximum, sur sept villages). Réduis l’un des deux nombres avant de continuer.',
+        6000
+      );
+      return;
+    }
+    etat.sommeAttendue = somme;
     etat.phase = 'association';
     rendreTout();
   });
