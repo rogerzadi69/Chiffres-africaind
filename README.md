@@ -15,6 +15,7 @@ de numération africain à logique constructive.
 | Atelier 1 | `awale-composer-les-nombres.html` | Kpo-awalé : composer des nombres avec des pions (report de dix en un) |
 | Atelier 2 | `kpo-awale-addition.html` | Kpo-awalé : additionner deux nombres (composition libre, association, conversion à gauche) |
 | Atelier 3 | `kpo-awale-soustraction.html` | Kpo-awalé : soustraire deux nombres (composition libre, retrait village par village, conversion à droite/emprunt) |
+| Atelier 4 | `kpo-awale-multiplication.html` | Kpo-awalé : multiplier deux nombres (Modèle × multiplicateur, recopie décalée, conversion à gauche) |
 
 ## Utilisation
 

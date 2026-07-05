@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kpo-awalé — Multiplier avec les pions</title>
+<style>
+  :root {
+    --encre: #1E3A8A;
+    --encre-douce: rgba(30, 58, 138, 0.62);
+    --encre-pale: rgba(30, 58, 138, 0.10);
+    --papier: #FAF8F2;
+    --papier-fonce: #F1EDE2;
+    --blanc: #FFFFFF;
+    --terre: #B4532F;
+    --or: #D9A441;
+    --alerte: #D8472B;
+    --succes: #2F7A4D;
+
+    --bois-1: #B5824C;
+    --bois-2: #8F6234;
+    --bois-3: #6E4A26;
+    --bois-rim: #C99755;
+    --creux: #2B1A0F;
+    --graine-1: #E7B96E;
+    --graine-2: #A6672B;
+    --graine-3: #7A4A1D;
+
+    --largeur-trou: clamp(46px, 7vw, 74px);
+    --ecart-trous: clamp(9px, 1.4vw, 18px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--papier);
+    background-image: radial-gradient(rgba(30,58,138,0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--encre);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ============ BANDEAU ============ */
+  header { max-width: 980px; margin: 0 auto; padding: 48px 24px 8px; text-align: center; }
+  .retour {
+    display: inline-block; font-size: 12px; letter-spacing: 0.1em;
+    color: var(--encre-douce); text-decoration: none; border-bottom: 1px solid transparent; margin-bottom: 22px;
+  }
+  .retour:hover { border-bottom-color: var(--encre-douce); }
+  .surtitre { font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--terre); margin-bottom: 16px; }
+  h1 { font-size: clamp(30px, 5vw, 50px); font-weight: normal; line-height: 1.1; }
+  .soustitre { margin: 16px auto 0; max-width: 660px; font-size: 16px; font-style: italic; color: var(--encre-douce); line-height: 1.6; }
+
+  /* ============ REGLE ============ */
+  .regle {
+    max-width: 800px; margin: 30px auto 0; background: var(--blanc);
+    border: 1.5px solid var(--encre); border-radius: 18px; padding: 20px 26px;
+    box-shadow: 0 4px 0 var(--encre);
+  }
+  .regle h2 { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: normal; color: var(--terre); margin-bottom: 12px; }
+  .regle ol { list-style: none; counter-reset: etape; }
+  .regle li { counter-increment: etape; font-size: 14.5px; line-height: 1.7; color: var(--encre-douce); position: relative; padding-left: 34px; }
+  .regle li + li { margin-top: 12px; }
+  .regle li::before {
+    content: counter(etape); position: absolute; left: 0; top: 1px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--terre); color: #fff; font-family: Georgia, serif;
+    font-size: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .regle strong { color: var(--encre); font-weight: bold; }
+
+  /* ============ ETAPES (stepper) ============ */
+  main { max-width: 1120px; margin: 0 auto; padding: 34px 16px 30px; }
+
+  .etapes-jeu {
+    display: flex; justify-content: center; align-items: center;
+    gap: 6px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .etape-jeu {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 20px;
+    background: var(--papier-fonce); color: var(--encre-douce);
+    font-size: 12.5px; letter-spacing: 0.06em;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .etape-jeu .num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--encre-pale); color: var(--encre-douce);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .etape-jeu.actuelle { background: var(--terre); color: #fff; }
+  .etape-jeu.actuelle .num { background: rgba(255,255,255,0.25); color: #fff; }
+  .etape-jeu.faite { color: var(--succes); }
+  .etape-jeu.faite .num { background: var(--succes); color: #fff; }
+  .fleche-etape { color: var(--encre-pale); font-size: 13px; }
+
+  /* ============ PLATEAU ============ */
+  .plateau-enveloppe { overflow-x: auto; padding: 10px 4px 26px; }
+
+  .plateau {
+    position: relative; width: max-content; min-width: 100%; margin: 0 auto;
+    padding: clamp(20px, 3vw, 38px) clamp(26px, 4.5vw, 56px);
+    border-radius: 44px;
+    background:
+      repeating-linear-gradient(100deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 7px),
+      radial-gradient(ellipse at 30% 15%, var(--bois-1), var(--bois-2) 55%, var(--bois-3) 100%);
+    box-shadow:
+      0 30px 60px -20px rgba(30,20,10,0.55),
+      0 2px 0 rgba(255,255,255,0.06) inset,
+      0 0 0 10px var(--bois-3),
+      0 0 0 12px var(--bois-rim);
+  }
+  .plateau::before, .plateau::after {
+    content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
+      repeating-radial-gradient(circle, rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.3) 2px, transparent 2px, transparent 5px);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.28) inset, 0 2px 4px rgba(0,0,0,0.4);
+    opacity: 0.5; pointer-events: none;
+  }
+  .plateau::before { left: 14px; }
+  .plateau::after { right: 14px; }
+
+  .lecture-panel {
+    display: flex; flex-direction: column; gap: 6px;
+    background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 15px; padding: 9px 18px 11px;
+    width: max-content; min-width: min(100%, 460px); margin: 0 auto;
+    transition: opacity 0.2s ease;
+  }
+  .lecture-panel.compacte { padding: 7px 16px 9px; gap: 4px; }
+  .lecture-panel + .trous { margin-top: 14px; }
+  .trous + .lecture-panel { margin-top: 14px; }
+  .lecture-panel.resultats { margin-top: 20px; }
+  .lecture-panel.eteinte { opacity: 0.45; }
+
+  .lecture-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .lecture-nom { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--graine-1); }
+  .lecture-role { font-size: 10px; font-style: italic; color: rgba(255,255,255,0.6); }
+  .btn-vider {
+    font-size: 10.5px; letter-spacing: 0.1em; color: var(--papier);
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px; padding: 4px 12px; cursor: pointer; transition: background 0.15s ease;
+  }
+  .btn-vider:hover { background: rgba(255,255,255,0.18); }
+  .btn-vider:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .lecture-corps { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .lecture-africaine { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+  .lecture-africaine img {
+    width: 16px; height: 16px;
+    filter: brightness(0) saturate(100%) invert(84%) sepia(28%) saturate(700%) hue-rotate(1deg) brightness(1.05);
+  }
+  .groupe-glyphes {
+    display: inline-flex; gap: 2px; align-items: center;
+    background: rgba(216,71,43,0.18); border: 1px solid rgba(216,71,43,0.5);
+    border-radius: 5px; padding: 2px 4px;
+  }
+  .groupe-glyphes img {
+    width: 14px; height: 14px;
+    filter: brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(2000%) hue-rotate(340deg) brightness(1.1);
+  }
+  .lecture-egal { color: var(--papier); opacity: 0.5; font-size: 12.5px; }
+  .lecture-arabe { font-family: Georgia, serif; font-size: 19px; letter-spacing: 0.03em; color: #fff; }
+  .lecture-panel.resultats .lecture-arabe { font-size: 23px; }
+  .lecture-lettres { font-size: 12px; font-style: italic; color: var(--graine-1); opacity: 0.85; line-height: 1.4; }
+
+  .remarque-conservation {
+    max-width: 480px; margin: 0 auto 22px; text-align: center;
+    font-size: 12.5px; font-style: italic; color: var(--graine-1);
+    background: rgba(255,255,255,0.06); border: 1px dashed rgba(231,185,110,0.4);
+    border-radius: 12px; padding: 10px 16px; opacity: 0; max-height: 0; overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
+  }
+  .remarque-conservation.visible { opacity: 1; max-height: 120px; margin-bottom: 22px; }
+
+  /* ---- Villages ---- */
+  .trous { display: flex; gap: var(--ecart-trous); justify-content: center; }
+  .trous.rangee-eteinte { opacity: 0.4; filter: saturate(0.3); }
+
+  .village { display: flex; flex-direction: column; align-items: center; position: relative; }
+
+  .trou {
+    position: relative; width: var(--largeur-trou); height: var(--largeur-trou);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, #3a2415 0%, var(--creux) 68%, #150a05 100%);
+    box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 1px 0 rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .village.actif .trou { cursor: pointer; }
+  .village.actif .trou:hover { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 3px rgba(255,255,255,0.25); }
+  .village.actif .trou:active { transform: scale(0.94); }
+
+  .village.inactif-tour .trou { opacity: 0.55; }
+
+  .village.attire.fusion .trou {
+    box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 4px rgba(217,164,65,0.55), 0 0 22px 2px rgba(217,164,65,0.45);
+    animation: appel-or 2.6s ease-in-out infinite;
+  }
+  .village.attire.conversion .trou {
+    box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 4px rgba(216,71,43,0.55), 0 0 22px 2px rgba(216,71,43,0.45);
+    animation: appel-alerte 1.6s ease-in-out infinite;
+  }
+  @keyframes appel-or {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 4px rgba(217,164,65,0.35), 0 0 14px 2px rgba(217,164,65,0.25); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 5px rgba(217,164,65,0.75), 0 0 26px 6px rgba(217,164,65,0.55); }
+  }
+  @keyframes appel-alerte {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 4px rgba(216,71,43,0.4), 0 0 14px 2px rgba(216,71,43,0.3); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 0 0 5px rgba(216,71,43,0.85), 0 0 28px 6px rgba(216,71,43,0.6); }
+  }
+
+  .village.plein-clignote .trou { animation: plein 0.5s ease 2; }
+  @keyframes plein {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(216,71,43,0.55); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(216,71,43,0.9); }
+  }
+
+  .village.copie-anime .trou { animation: copie-flash 0.65s ease; }
+  @keyframes copie-flash {
+    0% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 5px rgba(217,164,65,0.95), 0 0 26px 6px rgba(217,164,65,0.75); }
+    100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 1px 0 rgba(255,255,255,0.12); }
+  }
+
+  .graines {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+    width: 68%; height: 68%; align-content: center; justify-content: center; justify-items: center; align-items: center;
+    transition: width 0.2s ease, height 0.2s ease;
+  }
+  .graines.denses { grid-template-columns: repeat(5, 1fr); gap: 2px; width: 86%; height: 86%; }
+  .graines.tres-denses { grid-template-columns: repeat(8, 1fr); gap: 1px; width: 94%; height: 94%; }
+  .graine {
+    width: clamp(7px, 1.4vw, 12px); height: clamp(7px, 1.4vw, 12px); border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, var(--graine-1), var(--graine-2) 60%, var(--graine-3) 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(0,0,0,0.4);
+    animation: poser 0.28s ease;
+  }
+  .graines.denses .graine { width: clamp(5px, 0.9vw, 7px); height: clamp(5px, 0.9vw, 7px); }
+  .graines.tres-denses .graine { width: clamp(3px, 0.6vw, 4.5px); height: clamp(3px, 0.6vw, 4.5px); }
+  @keyframes poser { from { transform: scale(0) translateY(-6px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+  .badge-glyphes {
+    position: absolute; top: -7px; right: -7px;
+    display: flex; gap: 1px; align-items: center;
+    background: var(--terre); border-radius: 9px;
+    padding: 2px 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: 90px; flex-wrap: wrap;
+  }
+  .village.avec-glyphe .badge-glyphes { opacity: 1; transform: scale(1); }
+  .badge-glyphes img { width: 9px; height: 9px; filter: brightness(0) invert(1); }
+  .village.attire.conversion .badge-glyphes { background: var(--alerte); }
+
+  /* ---- Colonne vertébrale centrale ---- */
+  .colonne-vertebrale { margin: 16px 0 16px; }
+  .arete {
+    height: 6px; border-radius: 5px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.1));
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 -1px 0 rgba(0,0,0,0.3) inset;
+    margin-bottom: 9px;
+  }
+  .legende-centrale { display: flex; gap: var(--ecart-trous); justify-content: center; }
+  .legende-item {
+    width: var(--largeur-trou); text-align: center; font-size: 9px; letter-spacing: 0.02em;
+    text-transform: uppercase; color: var(--graine-1); opacity: 0.8; line-height: 1.25;
+  }
+
+  /* ============ CONTROLES ============ */
+  .controles-phase { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 22px; }
+  .btn-avancer {
+    font-size: 14px; letter-spacing: 0.06em; color: #fff;
+    background: var(--terre); border: none; border-radius: 24px;
+    padding: 12px 28px; cursor: pointer;
+    box-shadow: 0 4px 0 #7d3a20;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease;
+  }
+  .btn-avancer:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #7d3a20; }
+  .btn-avancer:active { transform: translateY(2px); box-shadow: 0 1px 0 #7d3a20; }
+  .btn-avancer:disabled { background: #C9BFAE; box-shadow: 0 4px 0 #a89d89; cursor: not-allowed; transform: none; }
+
+  .btn-recommencer {
+    font-size: 12.5px; letter-spacing: 0.08em; color: var(--encre);
+    background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 20px;
+    padding: 8px 18px; cursor: pointer; box-shadow: 0 3px 0 var(--encre);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn-recommencer:hover { transform: translateY(-2px); box-shadow: 0 5px 0 var(--encre); }
+  .btn-recommencer:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--encre); }
+
+  .message {
+    text-align: center; font-size: 13.5px; color: var(--alerte); font-style: italic;
+    min-height: 20px; margin-top: 4px; max-width: 640px;
+  }
+
+  .succes-final {
+    max-width: 580px; margin: 18px auto 0; text-align: center;
+    background: rgba(47,122,77,0.1); border: 1.5px solid var(--succes); border-radius: 16px;
+    padding: 18px 22px; color: var(--succes); font-size: 15px; line-height: 1.6;
+    opacity: 0; max-height: 0; overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
+  }
+  .succes-final.visible { opacity: 1; max-height: 260px; margin: 18px auto 20px; }
+  .succes-final strong { display: block; font-size: 19px; margin-bottom: 4px; }
+  .cadeau {
+    display: inline-block; font-size: 42px; margin-bottom: 6px;
+    animation: cadeau-bounce 0.7s ease;
+  }
+  .cadeau-etincelles { font-size: 18px; opacity: 0.85; }
+  @keyframes cadeau-bounce {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    55% { transform: scale(1.2) rotate(8deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ============ NOTE ============ */
+  .apropos {
+    max-width: 720px; margin: 20px auto 0; background: var(--papier-fonce);
+    border-left: 3px solid var(--terre); border-radius: 0 12px 12px 0;
+    padding: 18px 22px; font-size: 14px; line-height: 1.7; color: var(--encre-douce); font-style: italic;
+  }
+
+  footer { text-align: center; padding: 30px 24px 44px; font-size: 12px; letter-spacing: 0.08em; color: var(--encre-douce); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="retour" href="index.html">← Retour au parcours</a>
+  <p class="surtitre">Kpo-awalé · Atelier 4 — multiplier</p>
+  <h1>Multiplier avec les pions</h1>
+  <p class="soustitre">Trois rangées cette fois&nbsp;: le Modèle en haut, le multiplicateur au milieu, les résultats en bas. Chaque pion du multiplicateur recopie tout le Modèle, décalé à sa position, dans la rangée des résultats.</p>
+</header>
+
+<main>
+  <section class="regle">
+    <h2>La règle du jeu</h2>
+    <ol>
+      <li><strong>Composition libre.</strong> Compose le <strong>Modèle</strong> (rangée 1) et le <strong>nombre multiplicateur</strong> (rangée 2), village par village. Aucun village ne dépasse neuf pions.</li>
+      <li><strong>Multiplication.</strong> En commençant par le village des unités du multiplicateur, clique dessus autant de fois qu'il contient de pions. Chaque clic retire un pion et recopie tout le Modèle dans la rangée des résultats, en commençant au village qui porte la même position. Le village épuisé, on passe au suivant.</li>
+      <li><strong>Conversion à gauche.</strong> Le résultat peut contenir bien plus de neuf pions dans un village — c'est normal. En commençant par le premier village de la rangée des résultats, clique pour convertir dix pions en un seul pion à gauche, jusqu'à ce que chaque village en contienne moins de dix.</li>
+      <li><strong>Le cadeau.</strong> Si tout est exact — et ça l'est toujours, en suivant bien les règles — un cadeau attend le joueur !</li>
+    </ol>
+  </section>
+
+  <div class="etapes-jeu">
+    <div class="etape-jeu" data-etape="composition"><span class="num">1</span><span>Composer</span></div>
+    <span class="fleche-etape">→</span>
+    <div class="etape-jeu" data-etape="multiplication"><span class="num">2</span><span>Multiplier</span></div>
+    <span class="fleche-etape">→</span>
+    <div class="etape-jeu" data-etape="conversion"><span class="num">3</span><span>Convertir à gauche</span></div>
+  </div>
+
+  <div class="plateau-enveloppe">
+    <div class="plateau">
+
+      <div class="lecture-panel compacte" data-panel="0">
+        <div class="lecture-entete">
+          <span class="lecture-nom">Modèle <span class="lecture-role" data-role="0"></span></span>
+          <button class="btn-vider" data-row="0">Vider</button>
+        </div>
+        <div class="lecture-corps">
+          <div class="lecture-africaine" data-lecture-africaine="0"></div>
+          <span class="lecture-egal">=</span>
+          <span class="lecture-arabe" data-lecture-arabe="0">0</span>
+        </div>
+      </div>
+
+      <div class="trous" data-trous="0"></div>
+
+      <div class="lecture-panel compacte" data-panel="1">
+        <div class="lecture-entete">
+          <span class="lecture-nom">Multiplicateur <span class="lecture-role" data-role="1"></span></span>
+          <button class="btn-vider" data-row="1">Vider</button>
+        </div>
+        <div class="lecture-corps">
+          <div class="lecture-africaine" data-lecture-africaine="1"></div>
+          <span class="lecture-egal">=</span>
+          <span class="lecture-arabe" data-lecture-arabe="1">0</span>
+        </div>
+      </div>
+
+      <div class="trous" data-trous="1"></div>
+
+      <div class="colonne-vertebrale">
+        <div class="arete"></div>
+        <div class="legende-centrale">
+          <span class="legende-item">million</span>
+          <span class="legende-item">cent mille</span>
+          <span class="legende-item">dix mille</span>
+          <span class="legende-item">mille</span>
+          <span class="legende-item">centaines</span>
+          <span class="legende-item">dizaines</span>
+          <span class="legende-item">unités</span>
+        </div>
+      </div>
+
+      <div class="trous" data-trous="2"></div>
+
+      <div class="lecture-panel resultats" data-panel="2">
+        <div class="lecture-entete">
+          <span class="lecture-nom">Résultats <span class="lecture-role" data-role="2"></span></span>
+        </div>
+        <div class="lecture-corps">
+          <div class="lecture-africaine" data-lecture-africaine="2"></div>
+          <span class="lecture-egal">=</span>
+          <span class="lecture-arabe" data-lecture-arabe="2">0</span>
+        </div>
+        <p class="lecture-lettres" data-lecture-lettres="2">Zéro</p>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="remarque-conservation" id="remarque-conservation">
+    Remarque&nbsp;: la valeur totale de la rangée des résultats ne change jamais pendant la conversion à gauche — elle ne fait que ranger les pions correctement, village après village.
+  </p>
+
+  <div class="controles-phase">
+    <button class="btn-avancer" id="btn-vers-multiplication">Passer à la multiplication →</button>
+    <button class="btn-avancer" id="btn-vers-conversion" style="display:none;">Passer à la conversion à gauche →</button>
+    <button class="btn-recommencer" id="btn-recommencer">↺ Recommencer une multiplication</button>
+    <p class="message" id="message"></p>
+  </div>
+
+  <p class="succes-final" id="succes-final"></p>
+
+  <p class="apropos">Multiplier, c'est additionner le Modèle autant de fois que l'indique chaque pion du multiplicateur, en glissant d'une position à chaque rang du multiplicateur — exactement comme la multiplication posée à l'école, où l'on décale d'un cran vers la gauche à chaque nouveau chiffre du multiplicateur.</p>
+</main>
+
+<footer>Kpo-awalé · Atelier 4 sur 5 — multiplier · après composer, additionner et soustraire, viendra la division</footer>
+
+<script>
+(function () {
+  var GLYPHES = [
+    "data:image/png;base64,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", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB8klEQVR4nO2bP4sTURRHz31vNtnsGhDBFcFVWexSiqhY2OhHiJ0fwzoEC/8sVn4EK40WgoWNX0DQUizEThQEUdCgiXnXYlaxmNb3E72nGsjAnJx586a5A0EQBMH/i+ku7cZ4lgCYjQuY61yq4x3hJ6m+h2YFGOCHT042mv7+C8lo8td3T14/u/Hp5281ZSpXnyRwjp2+dnytP3yam+ah5ebBarD1fPvc9VF7St2VUDfAeGRgXnLazWubo7KcL8pyvrC8vkNJt6l896HuI7C3vN22z958mXLvhJcl4GbWePHV++8Hvuy8fTSdU/FRqLkCvN38zM34iFnCf/3JBJTybV/1PUmy89J5d7veDH8eVYC/hgigFlATAdQCaiKAWkBNBFALqIkAagE1EUAtoCYCqAXURAC1gJoIoBZQEwHUAmoigFpATQRQC6iJAGoBNRFALaAmAqgF1EQAtYCaCKAWUBMB1AJqIoBaQI0mgFEk1+2gcoDkAO6sd81KlsXnf3pS1NppUDdggLOirVCAlbmVg1ssKvoAtWeFz0/y3pchd1KzkS2lxsg59YYZuPtiNl0wvpepODUumM91Y3wpHX1z6iqWL5t7Lub3+8PelVePPyxh6gjG5iUcOXNrcOji7qbaQ0O71H8/Fn7ApcNUY/JBEADwA4r/c7tXVTFdAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADLklEQVR4nO2avW4TQRSFz5lZ2yQhIAqM+AsNEkVEgRBKCIUp4BFMR4toKRKgwbJoYhAS4hWowDwAggYkSOgoICkQNAECpIACA2HXM5fCCZjEOCRe+0owX2FZ1nrmzLczd7e4QCAQCAT+X7j2JSWDAgzyw5L67Aszjfm7NfZxeJTLfuODlEomvURatF9Dmx0gBCi7xioHMiZ3SFzymcZ1YLMZC8ABQJ+IIem/Nv3WOULC5La4+uLMmycXni2vpdWlrQUUixbVqhs6WjkDm71hTJSDeKS9T7k0vaQ8Mpc+RbwXH1+cm5q4glLJtDoOLQSUDFD2O49NDmXEviJNJFJPIOzCcVhe+F+Uoo0MbhiRFs65g2+mx5+3khCt+ltxmKgCGY+DjLKR1L/XQWa6k7Erg/7C+4SZTZYSHwbwHA9gAKwhoDojAOA8X1ifADRG4BIK00tLWLRavaCe1hRCEZJGxBvxdhYAkJ9dddba14DRyiWT7S+nfae8WwRk5XEkTNSX6jwA4ZPa9bnp8+fWUQOWaVTOPaOVgokyIyLOQnyHJkhAhMBZmmivOOdBIWnpvasBuAYible1/24aI2TkxSdPX09N3ENjnet4CvykURA3HOQP7BurPILNHZN67EAxZESBm597PLE77bnWkrm6BvxG2aN42xYWZvgwjSy1XcTmeZEEmZXmRcRsOzG59VPy7Qtq74jNOzt6NhYAPMwPC6ps+3LR5TK8ksbdGBqrPKHNjTTvAC/19/GA2f/h/vgXtNmyafMPvOp2RhCgHUCbIEA7gDZBgHYAbYIA7QDaBAHaAbQJArQDaBMEaAfQJgjQDqBNEKAdQJsgQDuANkGAdgBtggDtANoEAdoBtAkCtANoEwRoB9AmCNAOoE0QoB1AGx0BROqdZxulxwKMAIAINrXqgfJxrcdNW70VwEaXmBBAHwQODQsegKPQb88j7mEeAL0VICiU7FLT4k0T9VsaExHWmuygBXBrtlqOUbxt0aMWOaDnfYIAIETxlBl6e+QyaE9TxHrKndxgdvzl3Y8JUBb0UIAqe0av9e04eXVAO4cOja3e/F1hN+qzXBQDgYAOPwCGlxVZTcs9hgAAAABJRU5ErkJggg==", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEQklEQVR4nO2bz28bRRzF35tZ20matvQS1BSChBBIhIAgh+ZH1SDUK0f3T0AcQKhITUFCGIsDdVUkhLjwL2SP3IADETQtqgSibSKExIGkSpoWShB26nh35sthk5A4jtPEa4a08zlY8mp3vm/e7nx3Dm8Bj8fj8Ty8cOdTCgpjUOjpl9Sr355O6rdr7JdhUSzavQ9SKKj0FLmi+RyaPAFCgNI7Unomo3Ivion+pjItuLkRDcAAQKeIImmXNxxrHSGhcodMXJ2+eeWd62tzaXRqYwPyeY0wNH3Dpdegs58qFeQgFmk/p1wtLymPzNVfEWvF1t6dnRq/gEJBNVoODQwoKKBoj46e78uI/pVUgUgcQdiG5bA28ftoRXsZXDEgNYwxAzcvn73RyIRgy2X5fiIEMhYDDLKBxCsxyEx7NLZl0H+xNmKmQ1NqgwBu4BsoADsYEE4LABjLX7SNAColMBGF6aklNBrNXhCnVUIoQlKJWCVWzwAAema2rLXmPWCo9L7KdhXTvlPWVAGpX46ECjpTrQMQNip/Mnv53Jld9IA1ks752FBpTAWZ4yJGQ2yLTpCACIHXqYLHxRgLCklNa00ZwMcgas269v2VUUIGVmz049zU+JdI5rmLt8A6SUPcs5BteGKk9B10blTimgFFkQEFZn720vixtGvtZObWHrCJokV+Qo/dnuZkGlrKvUT3vEiETL3zIqKOnDp/+M/oXgXlBaL7aEvvxjEAkz39gpBNNxdtbsP1JHejb6R0hTp3fOMTYCW+VTugnlr86mwFTR7ZtHkAtrqt4Q1wLcA13gDXAlzjDXAtwDXeANcCXOMNcC3ANd4A1wJc4w1wLcA13gDXAlzjDXAtwDXeANcCXOMNcC3ANd4A1wJc4w1wLcA13gDXAlzjDXAtwDUPvQE7JESEyIcK4WkLFFIIU4QECtsGH+KKVUksZ4bAsy0GJIqC/IRCmLfNIjL/cUIkoW+0NEWVG65LiCzMXRo/BrYQjtqe3YakVqMsJz46QnR8CNghsXEFoG022C6EvATyEEQkOUYIpEbB9yBMizUAgITuFoWfQL43++3bC9uFpRoZQKDAwcFefSe39LXOPnLSxstgiklZa6PGOUGdTa2GiIUKOmFqf11fKavhxWvle0BRUGdsg6hsXiEsmjuZC8PUHSdNbSkCqJKblRKJm3XmC2xcTSkuDoBkvFKLdKZrIHuw+gpQ/AL5CY3w9KYaDZpgHkAIkLkNB1W63ULWfzaLTvetxHWTTRJBXftAY/M5ja4TPPr8xa7sAftDkD34tI0r25z6f0ZA3QUTL98yUcdz81ffuLs6hx2WACDAB2rxWrHSe+Liq8pUPxOoFyBxgDQD0+2EIoA2sLWflcRvzV198w/g9y1JcaD5bV3vxE+e+vxwXL27rzZN1B3y2+SZpeTfnrPHBZVcvF8RtvDNUP1A+5G2bKo8ngeJfwC075q2EIbfuAAAAABJRU5ErkJggg==", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADSklEQVR4nO2bu4skVRSHv3OqultHXDOFYZlgAwWXVRYU3FUYA1PBZEAwNxURHxuVnQgzbCBi4t/Q8ebbBqORwT7ExMBlYX2zsKz2dN17j0HXLI5d/ahxem4Nc7+goKrrFr/66p5bHZyCRCKRSJxeZPEphbKJ8vR5W32cI+TX28LrBPr9cPiLFIUeXaJYzL+HOTPABMTWL28/19HeRfPlA1H/P2weIyaC9s54N7p999tPbu7fS92p9QK2tjIGA79xaftdsu4XqnkPC5yUGpBqaxaChfGVO7sf7VAUWlcONQIKhX449+rnG87KH0U0N3MlJietHAyRXDTHe3fh7jcf3qqTkE8N2zovDMDL+HnRXm5u5BHpLLNcto9Qiua5+vFF4BbXUWCBAAYAuHF2P+96Q/jvkw8YbV0LBCF7tGcik2P19Q+1AvYvFQwygX+XviHaUdFuK8vBzGF+j6Xe7hWzBUxdnSBZV4Mb76LlNTNUpB0zYT+LIC+Ldt8yX4aamVvL8gIgiHZVGH99Z/fjzw6ZdaVsvLL9juSdiQCOXgBgGKyxWeTVWNc45WrIAWelnaHhy7qhABAhMOw7NgsY9tshoMoil7Z906GtXMyOkyQgdoDYJAGxA8QmCYgdIDZJQOwAsUkCYgeITRIQO0BskoDYAWKTBMQOEJskIHaA2CQBsQPEJgmIHSA2SUDsALFJAmIHiE0SEDtAbJKA2AFic+oFNG6QwEygUH5DF7WhHhtVFpt0hTWisQBDSugHvmfcdOzK2M+iO3tNhy4vQMiCHyEqb29c3nmJSS9aW7pnJ1nM1oPf40Cv4AJmChCdaoETzCOSnxXNzx426Sox81hw0KBRcPYMsLAGuVVd1tUFBTNn5lwr+gOnEBGmF3ZjztpQI2ALGJApimQCYwciB2b7kk2Ix4892lRVEUByxP6aNaLOjIDxzAtX13pPhO+y7pPPBvdwxqltxpDscbz7+2fXkQv3hh/8MTl+sG+4rgQMPtVfbvQfrr929U3xoy8NfRFz+byp1CrEDDJPKH9Qc+/dG175HR4oLPW9wIHfDODcG1895UZ/tnTa1yPZY/bT8P37k73ZX4wsoNDJ4JNK9adtDkve3EmVcKinnkicJv4BgGcShk2aapcAAAAASUVORK5CYII=",
+    "data:image/png;base64,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", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADsUlEQVR4nO2bP2wbVRzHP993VycETNWliCgENRIgpRIMoFaNkCqkjsCEK1YkBAMDU4HN9dY22WBhYo83VpDKwoIEA1KZEEhsLRJSktr4z937MZxdSmM7ti/Os+l9pJN81t173/e95/d833cHBQUF/yMUWkAYKrsR/cZXdiOwx8mIfxt7+fLteNKzF9ypqoOaX7904x3c0jWwM8hux8vdT3779rN9MEA2qoSJHZsbKpWIei19fuvmG0TLdQHmu7i4/EK3ubcK9jZcF5kLQ3Eno3YG3NsUgDfelyLzSatt5n3a3kslvfnc1vYG1HzWS4azuAacPd+/sj4bBxQBDhGBLIUyANXRxSyuAffuCEBO9wcMZZLDj1PM4hrQx/K1YfENyElhQGgBoSkMCC0gNIUBoQWEpjAgtIDQFAaEFhCawoDQAkJTGBBaQGiOMMDUi5yzz/O03V8VmMzyReCjQlGBjDppb3dkuHji/EgXPkRsJ3mKGWJAFjdvXNo+m7johswuGEkTxouZTgYJzAx/zqctsixwcgYZIIDNzd3SAb9/HZ8qX/RJE2kpl9xZIZ9ilsKUaxyHDajsOupX04MzOxecW76YdPa6QhE2Ol8PhsxlvWE6ho4B8t0SikymCOEe8teOWGs4YfItbg0woA6AJz6IMGVj30OVSJry5zYTDA82/QUZ2gPM4w63U2C+6fH72U7QriDAhJ4GrUwrZfy1QSNxp56IrdP4ql12n3YsjUuKck1BeejXv9Twn7t45T3fbSZo8rXOiU8wWefuN9cazEkPWN+62clTyBR/hSVAvPpB3BMRZntQ//QzAEy/PG489awRsgccU/3FzVBoAaEpDAgtIDSFAaEFhKYwILSA0BQGhBYQmsfegMnvBcwEVcefuKOewpwpvfpnGYsPxFAXap5fyHUbmpte/dKtbp5ixjdARD5tIad317duvcac5AFm9tJxx+JZ6YcfNRWWIsVrcvHaNJXNAvMJZgnT5gLDe4D5FYiN/6SiwiwxS5L5WSARg2Jxw6KxDBlgQAWoEzkcigSdpLcK80il80Q/FpZhZojI1P57nDMHuSQwnnl5Z2XpSf9TVCq/6JPGkEPnDDNcqUza3vvuj7VzV6jfseydgeEM+gkYXHd3f641Vl/feUtp6wvDvYIlMZYvf5sZIovHFCVpp/G9En1E/Wo6zjQ9qkEPRvmNK1+eTlp/zVm3f5TTlDrd9NcfPt7vfXEcs1TVLdwraNXJNI954CKZMGfPMRQUzDf/ANYxVzIsZ2DgAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEVklEQVR4nO2bzYscRRjGn/et7l5dJAiCmCgTchA/lhUWCdmNwnhNTl7GS+6CF0XExJya8WJmg5j4Z2RO/geZy7oXT8mKKCKuKytrhMBC3J3uqsdDz6zsZL56dibVQ/oHM9AzXTVPPVVv99TbVUBJSUlJydOLjD4lVlSheHGJs5czRfa2BO/BoV53k1cSxzo9Rb4Y3oYhI4ACCM9cbLwW6sIKbbIvak/g5hOEItCFUzY92NrZ/OJety39Tu1vQK1m0GzaylrjQ5joW9VgAXSYlxiQzjvpHF37+vbG1XXEsfYLhz4GxArU3el3blRCml9FNCDTBJR5CwdCJBANYG26vPP95/f7mRA8Vqy2JGgCocOyBFHA9DCFSDjO5bJ4uEQ0CNS2VwDcx10ogBEGNLcIANbJz8YlgKgSNhHKPFggEJijo0yzQPrHP9DPANQdajXzZ/PaL5XVRqzRYh2Yj+FPpqA9xFh39w59DADQbFqAsr0pX76y2mhpEF4grQFdIUcBCRWBE8h50eh92sRBMFan9TcAQHbbiHVn81oLQGtKWmdKZbVxRYIwMwAnNgDIwuGOqe5tScEdCACkTHgKOW/WIwwA0PzAFrzxQDUGWvVU1ho2b9G5uLjNktIA3wJ8UxrgW4BvSgN8C/BNaYBvAb4pDfAtwDej5wJHxIraUiGnw9jfNajdIf/4LXeHjmdAN5fWzC3tSZFNglbXH+UtOIYBFNTFvXyh8Wq4EL3BtL2fWsfODDTv780EqhpxzkLxFujQSYOPVXa4AXGsqIurrN34GCa6CZoIGiE4Gmg5ImjWGAB0cPYQEDEjz+8wpAXZsK+8e/NNgd4GLZxN0nFTTX6gAPmSt4MbU+1852RFNAJpEwiCTpmCvvJnrgePgO7DUKYPyRCgaE9YORBFe1R2PC0+BiODWIz2STMRopGKhoUKh+mlxY/V6qS350Ujda59V2yyAaGC4nckdDQQXFETXqJLp5UV7gMzA8Dku+2Nq7dyl58hldXGFdHoEm06jecCwyDo+ByqcYBi/CGYYVp8ACJwaNXTbkp60nqmQpkWn5zSAN8CfFMa4FuAb0oDfAvwTWmAbwG+OUFKRwSIFX9DRy1HnTkdDZxgJdvEBhBsA3WHH9GetI6p0dWg64d5i+Y3QGCcPYAAH1Uurl9GNvn2vYo200CeyXKC4ydFRidEFK6ndQJaqIbnRMy53FJnCGlBlwI5MiIjDaDTRWhvDwvoUkcmvnv+OCKCxy/sxJBrw2AD9rYEAOgQqDFC0GYrRo/aLOjNFXmHR2+dqHCABBAOfGAyYr8AcPrtr18IFnjPBIsv0T4aXqRQEGKehU3//SsNZXm39dk/2efH1w2PXCm6+0P9wdm1ry7TtW+T8jpgzbAhVQiEBIyFS35Spp/stq4/APYVGGu/QC//77Y4W/3medqDYje+g5hn+Hvr04fZ0eAdI2MSazck5gvKCfYMDapwnjhRr5eUPA38B3/1obEKN+vEAAAAAElFTkSuQmCC", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEWElEQVR4nO2bvW8cRRjGn+edvTtslNCBsMIVKUAiCsgSRHZAOoQoQaIxQqKnjVDEh6vlCiLdKQVCUPAvcLRIlDGFSUUBCaIBRAgy34piJbFvZ+al2DvL9u19zMXnXeP9FSvd3s7q2WfnnZ19dhcoKSkpKTm+cPwmsaABwcNndPZyDpA/rxMvwKPZ9NPvJI7l4BTlxehjGNEDlAB14XzriYrUFtUlmxR3H24eIkpCaied3bp+8+p73/WPJWvTbANWVgw6HVdfbr0JU/1IJKpBPY5KDbC3VPVefXf1xvo7bcSxZJVDhgGxAE1/+rkP61aTH0mJVG0C5VErBwUZUSI4Z8/e/Prta1kmRAPNVs4QHcCx+ySlFqndciArkwyXxcMnlCgS110EcA1XIADGGIAOAMB2za2o6hTE/jPvoSjqWEAQZueXkum67PoHMg3o78orYAjsLn0FpSKUaiHLQdVC3TYmurr3GG7AwN7haaribXcdknyhCiGL0RP6Wgg+S6m+qi7xGT03k8kNADylKkT3qxvr716aUutMqS+13mBUSQ3AwRsAQKHAPBpx1Gtrg1XOhgiA1URPIvBiHWgAQMJjrWnRiIG1ZjEM6GnhcsuFNi3kYHaYlAbkLSBvSgPyFpA3pQF5C8ib0oC8BeTNsTcgeCqsCtm5F2jEM5A0FREaMTRRM37T/Q2DIAjc7d0DFOM+IMUCAJdat0OyACDEAELUdwHhi/Xl9gegCpSFyAP6WhS6qL6LSbMAYIQBpOy/rxT1XVAq5yjVc1OLnSG7EqH7N0DgKkBl31pCvfXqbDHO/CAEGTQOZBiwAqADRJgDCSg1Lf0dJKSLFZ2hqbC35raJPEDlvoFFERq7HBpKgEGj4NASUPUEBnsTKQRNMZ8SqIdqWCgUkAqrk2jOuOTe516TT1TE0PvgCGoW9LWIMS8bU7vo04c5E40FAfMAKmgA4qffrq5emVLrTHlsqV1HJBj2IDSL4FSYyhpWPjPY3Ihw4tFiTIb6Wn79eT60afBUGFRF5zWHRkx8eaEQJdDXwuVW8OX5f3M5m5bSgLwF5E1pQN4C8qY0IG8BeVMakLeAvDn2BoRPhVUJxIK/IONeQz00elpUw7IAYJpYHEyApsf36Ia2nRl9LdLeDm0akgob77ZA4ev18+1nkMZERUmGUi2qC95tY8+7gmMYngrLwCtwhDqQ0SlKdGpapbNE1UF9+ohg0jbDe4D6eSDSXrjQ2yGhalVtQVNhkhgc2BUjxoahqbARSJr9dW0aNO7q7YVNhXVn0asKDzAC9e6wFlnOEFA88tTl+dqD/htTPfG4t3eGbFpkFDRzcPbe77bCsxtrF/9J1++Ny7JKQIH35Y9vm3cWnr/8Ct3Wxwp5GmqjUV2pUFAVMA4++UHUXthYW/0b2BRgou8F9vynAHD6pU8fslv/FrTbZ0PzgP6y9tat9NfwL0bGEEva+KjSm7SNYMKDO6omTHXWS0qOE/8B/XWL09LUkuAAAAAASUVORK5CYII=", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEb0lEQVR4nO2bzW8bRRjGn/fd8TpNaRCXUiJkpB5AIiqoRIgkRA0HjiC4uJfeOJQjqio+etqukECOKgEVl/In4AsX7phDaA/lAA3igkSqSAUCKFJJ7Xhn5uWw66ZJ1h/r2tmJuj9pbXm1M37m8Xx4n90FCgoKCgoeXaj/IQFjCYzjMzJ+OSPkr1XCa7AIQzt8JUHAo1OUF73b0KMHCAEk0wu150pcPi0muktsHsLNA0SIwOUpo1ur69c/+rnTlrRD0w2oVj3U66YyXzsPz7/KrMoQi8MyBih5FbFWbPvS7ZUPlhEEnDYcUgwIGAjtyVc/r2iJfiNiJaIjCB224SAgUsQKxuhT6z+8fyvNBLWvWHWGUAcMtZ8nLivRLQOi0iDTpXvYiFgpNu3TAG7hOzCAPgagDgDQbW9T+UZA2PvLWwhcnQsIBO/+JyGK96WPfyDVgE5VVgCPgAeHvoC4xMS+k8NBREPMNgZa3RO6G7CvdljyfLa6vQKOvhUBE7nREzpaCPQysf+2mMim9NxUBjcAsMQ+E9rf31758JMhtY6VylztHKlSbABGbwAAgQCTWApUUlZnVjkeFAAtkUwh42Kd0QCACBaNUGMpABqhGwYkWmi+ZrIWdXIyO0gKA/IWkDeFAXkLyJvCgLwF5E1hQN4C8ia7ASIECOG/6fjdhS3RIiKZU4theoAGSHDz3SjO2RzYEi1MFGVtzODnAgTPmhaE6FxlobYIEAHiSEwYa7GC42S2sSsU6UNXA4j3nesTxIJZnQB7J4bWOkZILMRqIEMi0tUAsfooPJV0s50KRbRAOxqPEwgZh3WKAVUAdSgFgDwStDXtdZTE0dUje3K734D6WQsEbIx/g21zVflTM1ZvDVX5QSMQQLJ1zrQhIABo/frF5jOvfPaGMc0vCPSSFePFy46TdMLbSQJnSoW6zAGhBUBrNy78DuCtp+e+PhIdW2NXe0FbjPLJ0+UteYfVxFUbNTVosBWu10ECBIwAWA/PNkekdVwQAKks1DLr7ONSaBF2vmDXYuAWs+cVbn6lxcrA63+HQf8IibONB4DHnhIAQj2uAHXD0eXs4CgMyFtA3hQG5C0gbwoD8haQN4UBeQvIm8KAvAXkTZ9zASFU65yEJO6eDGyAgYAlvissE30MIEEdyV0XoSMJcAq/oA0A4OXtrEW7GBDfW1tZ/PQJwsTHgJ0Tq7cAsthJX1wi1iQybUcQixNwmWZnr6kNu/kN+5NnrL4H9iZGJ3dMiJgRxOLVKqMemo3S8jx5E2dMezMCiMWVayC9IEqLxQU95oausTiIyg/sZJfzkB3k/ksyKixACiT3upVIaxYBgidfuDLpH7U/Kv/Ys4clFt+NgLwjMLr5hy7RqTuNi//E+3enRl1i8cv850/h1vTilTfZtL4U8IsQrXp1JacgEcAzsNGvLPq9O41LfwN3OUm7dx/aqxok3enk69ce161/D9WfJvImZK1xYTP+1P2JkT4E7PDFkAEQeohnhvZWdBgZ6lcvKHiU+B8q8dr4qlNS4wAAAABJRU5ErkJggg=="
+  ];
+  var MAX_VILLAGES = 7;
+  var MAX_COMPOSITION = 9;
+  var MAX_POINTS_AFFICHES = 72;
+
+  var NOMS_POSITION = ['unités', 'dizaines', 'centaines', 'mille', 'dix mille', 'cent mille', 'million'];
+
+  var etat = {
+    phase: 'composition', // composition | multiplication | conversion
+    rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ]
+  };
+
+  function creerImg(chiffre) {
+    var img = document.createElement('img');
+    img.src = GLYPHES[chiffre];
+    img.alt = String(chiffre);
+    return img;
+  }
+
+  // Renvoie une liste d'éléments DOM représentant une valeur en chiffres africains
+  // (un seul glyphe si 0-9, un groupe de glyphes accolés au-delà).
+  function creerGlyphesPourValeur(v) {
+    if (v <= 9) return [creerImg(v)];
+    var chiffres = String(v).split('').map(Number);
+    var groupe = document.createElement('span');
+    groupe.className = 'groupe-glyphes';
+    chiffres.forEach(function (c) { groupe.appendChild(creerImg(c)); });
+    return [groupe];
+  }
+
+  // ---- Nombre en toutes lettres (français, 0 à 9 999 999) ----
+  var UNITES = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf',
+    'dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
+  var DIZAINES = { 2:'vingt', 3:'trente', 4:'quarante', 5:'cinquante', 6:'soixante', 8:'quatre-vingt' };
+
+  function deuxChiffresEnLettres(n, dernier) {
+    if (n < 20) return UNITES[n];
+    var dizaine = Math.floor(n / 10);
+    var unite = n % 10;
+    if (dizaine === 7 || dizaine === 9) {
+      var base = dizaine === 7 ? 'soixante' : 'quatre-vingt';
+      var reste = 10 + unite;
+      if (unite === 1 && dizaine === 7) return base + '-et-' + UNITES[reste];
+      return base + '-' + UNITES[reste];
+    }
+    var motDizaine = DIZAINES[dizaine];
+    if (unite === 0) return (dizaine === 8 && dernier) ? motDizaine + 's' : motDizaine;
+    if (unite === 1 && dizaine !== 8) return motDizaine + '-et-un';
+    return motDizaine + '-' + UNITES[unite];
+  }
+
+  function troisChiffresEnLettres(n, dernier) {
+    var centaines = Math.floor(n / 100);
+    var reste = n % 100;
+    var mot = '';
+    if (centaines > 0) {
+      mot += centaines === 1 ? 'cent' : UNITES[centaines] + ' cent';
+      if (centaines > 1 && reste === 0 && dernier) mot += 's';
+    }
+    if (reste > 0) {
+      if (mot) mot += ' ';
+      mot += deuxChiffresEnLettres(reste, dernier);
+    }
+    return mot;
+  }
+
+  function nombreEnLettres(n) {
+    if (n === 0) return 'zéro';
+    var parties = [];
+    var millions = Math.floor(n / 1000000);
+    var apresMillions = n % 1000000;
+    var milliers = Math.floor(apresMillions / 1000);
+    var unites3 = apresMillions % 1000;
+
+    if (millions > 0) {
+      parties.push(troisChiffresEnLettres(millions, false) + ' ' + (millions > 1 ? 'millions' : 'million'));
+    }
+    if (milliers > 0) {
+      parties.push(milliers === 1 ? 'mille' : troisChiffresEnLettres(milliers, false) + ' mille');
+    }
+    if (unites3 > 0 || parties.length === 0) {
+      parties.push(troisChiffresEnLettres(unites3, true));
+    }
+    var texte = parties.join(' ').replace(/\s+/g, ' ').trim();
+    return texte.charAt(0).toUpperCase() + texte.slice(1);
+  }
+
+  function valeurTotale(row) {
+    var total = 0;
+    for (var i = 0; i < row.length; i++) total += row[i] * Math.pow(10, i);
+    return total;
+  }
+
+  function premierVillageActif(row) {
+    for (var i = 0; i < MAX_VILLAGES; i++) if (row[i] > 0) return i;
+    return null;
+  }
+
+  // ---- Construction du plateau (une fois) ----
+  function construirePlateau() {
+    for (var r = 0; r < 3; r++) {
+      var conteneur = document.querySelector('.trous[data-trous="' + r + '"]');
+      conteneur.innerHTML = '';
+      for (var pos = MAX_VILLAGES; pos >= 1; pos--) {
+        var villageEl = document.createElement('div');
+        villageEl.className = 'village';
+        villageEl.dataset.pos = pos;
+        villageEl.dataset.row = r;
+
+        var trou = document.createElement('div');
+        trou.className = 'trou';
+
+        var graines = document.createElement('div');
+        graines.className = 'graines';
+        trou.appendChild(graines);
+
+        var badgeGlyphes = document.createElement('div');
+        badgeGlyphes.className = 'badge-glyphes';
+        trou.appendChild(badgeGlyphes);
+
+        villageEl.appendChild(trou);
+        conteneur.appendChild(villageEl);
+
+        trou.addEventListener('click', (function (row, pos) {
+          return function () { onPitClick(row, pos); };
+        })(r, pos));
+      }
+    }
+  }
+
+  function afficherMessage(texte, duree) {
+    var el = document.getElementById('message');
+    el.textContent = texte;
+    if (texte) setTimeout(function () { if (el.textContent === texte) el.textContent = ''; }, duree || 3200);
+  }
+
+  function flashPlein(r, pos) {
+    var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
+    villageEl.classList.add('plein-clignote');
+    setTimeout(function () { villageEl.classList.remove('plein-clignote'); }, 1000);
+  }
+
+  function decrireCopie(idx) {
+    return 'Un pion retiré des ' + NOMS_POSITION[idx] + ' du multiplicateur : le Modèle est recopié en commençant au village des ' + NOMS_POSITION[idx] + '.';
+  }
+
+  function animerCopie(idxCible, modele) {
+    var elements = [];
+    for (var m = 0; m < MAX_VILLAGES; m++) {
+      if (modele[m] > 0) {
+        var elM = document.querySelector('.trous[data-trous="0"] .village[data-pos="' + (m + 1) + '"]');
+        if (elM) elements.push(elM);
+        var cible = idxCible + m;
+        if (cible < MAX_VILLAGES) {
+          var elR = document.querySelector('.trous[data-trous="2"] .village[data-pos="' + (cible + 1) + '"]');
+          if (elR) elements.push(elR);
+        }
+      }
+    }
+    elements.forEach(function (el) { el.classList.add('copie-anime'); });
+    setTimeout(function () { elements.forEach(function (el) { el.classList.remove('copie-anime'); }); }, 650);
+  }
+
+  function onPitClick(r, pos) {
+    var idx = pos - 1;
+
+    if (etat.phase === 'composition') {
+      if (r === 2) return;
+      if (etat.rows[r][idx] >= MAX_COMPOSITION) {
+        flashPlein(r, pos);
+        afficherMessage('Ce village a déjà neuf pions : c’est le maximum pendant la composition.');
+        return;
+      }
+      etat.rows[r][idx]++;
+      rendreTout();
+      return;
+    }
+
+    if (etat.phase === 'multiplication' && r === 1) {
+      var idxActif = premierVillageActif(etat.rows[1]);
+      if (idxActif === null || idx !== idxActif) return;
+
+      etat.rows[1][idx]--;
+      var modele = etat.rows[0];
+      var depassement = false;
+      for (var m = 0; m < MAX_VILLAGES; m++) {
+        if (modele[m] > 0) {
+          var cible = idx + m;
+          if (cible < MAX_VILLAGES) etat.rows[2][cible] += modele[m];
+          else depassement = true;
+        }
+      }
+      animerCopie(idx, modele);
+      afficherMessage(decrireCopie(idx) + (depassement ? ' Attention : une partie du produit dépasse la capacité du plateau (sept villages).' : ''));
+      rendreTout();
+      return;
+    }
+
+    if (etat.phase === 'conversion' && r === 2) {
+      var compte = etat.rows[2][idx];
+      if (compte < 10) return;
+      var i = idx;
+      while (etat.rows[2][i] >= 10) {
+        etat.rows[2][i] -= 10;
+        if (i + 1 < MAX_VILLAGES) {
+          etat.rows[2][i + 1] += 1;
+        } else {
+          afficherMessage('Le plateau n’a que sept villages : ce résultat dépasse sa capacité (il faudrait un 8ᵉ village).');
+          break;
+        }
+      }
+      rendreTout();
+      return;
+    }
+  }
+
+  function rendreTout() {
+    for (var r = 0; r < 3; r++) {
+      var row = etat.rows[r];
+      var idxActifMultiplicateur = (r === 1) ? premierVillageActif(row) : null;
+
+      for (var pos = 1; pos <= MAX_VILLAGES; pos++) {
+        var idx = pos - 1;
+        var compte = row[idx];
+        var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
+        var graines = villageEl.querySelector('.graines');
+        var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
+
+        var estActif = false, attireFusion = false, attireConversion = false, inactifTour = false;
+        if (etat.phase === 'composition') {
+          estActif = (r === 0 || r === 1);
+        } else if (etat.phase === 'multiplication' && r === 1) {
+          estActif = (idx === idxActifMultiplicateur);
+          attireFusion = estActif;
+          inactifTour = !estActif;
+        } else if (etat.phase === 'conversion' && r === 2) {
+          estActif = compte >= 10;
+          attireConversion = compte >= 10;
+        }
+        villageEl.classList.toggle('actif', estActif);
+        villageEl.classList.toggle('attire', attireFusion || attireConversion);
+        villageEl.classList.toggle('fusion', attireFusion);
+        villageEl.classList.toggle('conversion', attireConversion);
+        villageEl.classList.toggle('inactif-tour', inactifTour);
+
+        // Toujours des pions dans le village, jamais de chiffre arabe.
+        var classeDensite = compte > 24 ? 'tres-denses' : (compte > 9 ? 'denses' : '');
+        graines.className = 'graines' + (classeDensite ? ' ' + classeDensite : '');
+        graines.innerHTML = '';
+        var nbPoints = Math.min(compte, MAX_POINTS_AFFICHES);
+        for (var s = 0; s < nbPoints; s++) {
+          var grain = document.createElement('span');
+          grain.className = 'graine';
+          graines.appendChild(grain);
+        }
+
+        // L'étiquette affiche le compte en chiffres africains (un ou plusieurs glyphes).
+        badgeGlyphes.innerHTML = '';
+        if (compte > 0) {
+          creerGlyphesPourValeur(compte).forEach(function (el) { badgeGlyphes.appendChild(el); });
+        }
+        villageEl.classList.toggle('avec-glyphe', compte > 0);
+      }
+
+      var multiplicateurEpuise = etat.rows[1].every(function (v) { return v === 0; });
+      var trousEl = document.querySelector('.trous[data-trous="' + r + '"]');
+      trousEl.classList.toggle('rangee-eteinte', r === 1 && etat.phase !== 'composition' && multiplicateurEpuise);
+
+      // lecture (arabe + lettres toujours exactes, quel que soit l'état des villages)
+      var valeurLigne = valeurTotale(row);
+      document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = valeurLigne.toLocaleString('fr-FR');
+      var elLettres = document.querySelector('[data-lecture-lettres="' + r + '"]');
+      if (elLettres) elLettres.textContent = nombreEnLettres(valeurLigne);
+
+      // lecture africaine : un glyphe par village, ou un groupe si non encore converti
+      var digitsGaucheADroite = row.slice().reverse();
+      var lectureAfricaine = document.querySelector('[data-lecture-africaine="' + r + '"]');
+      lectureAfricaine.innerHTML = '';
+      digitsGaucheADroite.forEach(function (d) {
+        creerGlyphesPourValeur(d).forEach(function (el) { lectureAfricaine.appendChild(el); });
+      });
+
+      var panneau = document.querySelector('.lecture-panel[data-panel="' + r + '"]');
+      panneau.classList.toggle('eteinte', r === 1 && etat.phase !== 'composition' && multiplicateurEpuise);
+      var btnVider = document.querySelector('.btn-vider[data-row="' + r + '"]');
+      if (btnVider) btnVider.disabled = etat.phase !== 'composition';
+
+      var role = document.querySelector('.lecture-role[data-role="' + r + '"]');
+      if (role) {
+        if (r === 0) {
+          role.textContent = '';
+        } else if (r === 1) {
+          role.textContent = etat.phase === 'composition' ? ''
+            : (multiplicateurEpuise ? '— épuisé' : '— en cours');
+        } else {
+          role.textContent = etat.phase === 'conversion' ? '— en cours de rangement' : '';
+        }
+      }
+    }
+
+    // stepper
+    ['composition', 'multiplication', 'conversion'].forEach(function (p, i) {
+      var ordre = ['composition', 'multiplication', 'conversion'];
+      var el = document.querySelector('.etape-jeu[data-etape="' + p + '"]');
+      var indexActuel = ordre.indexOf(etat.phase);
+      el.classList.toggle('actuelle', p === etat.phase);
+      el.classList.toggle('faite', i < indexActuel);
+    });
+
+    // boutons de transition
+    var multiplicateurEpuiseGlobal = etat.rows[1].every(function (v) { return v === 0; });
+    document.getElementById('btn-vers-multiplication').style.display = (etat.phase === 'composition') ? '' : 'none';
+    document.getElementById('btn-vers-conversion').style.display = (etat.phase === 'multiplication') ? '' : 'none';
+    document.getElementById('btn-vers-conversion').disabled = !multiplicateurEpuiseGlobal;
+
+    // remarque affichée pendant la conversion
+    var remarque = document.getElementById('remarque-conservation');
+    remarque.classList.toggle('visible', etat.phase === 'conversion');
+
+    // message de réussite finale + cadeau
+    var succesEl = document.getElementById('succes-final');
+    var conversionTerminee = etat.phase === 'conversion' && etat.rows[2].every(function (v) { return v < 10; });
+    if (conversionTerminee) {
+      var texteA = document.querySelector('[data-lecture-arabe="2"]').textContent;
+      var texteLettres = document.querySelector('[data-lecture-lettres="2"]').textContent;
+      succesEl.innerHTML =
+        '<span class="cadeau">🎁</span><br>' +
+        '<strong>✓ ' + texteA + '</strong>' + texteLettres +
+        '. <span class="cadeau-etincelles">✨ Bravo, ta multiplication est exacte ! Voici ton cadeau. ✨</span>';
+      succesEl.classList.add('visible');
+    } else {
+      succesEl.classList.remove('visible');
+    }
+  }
+
+  document.getElementById('btn-vers-multiplication').addEventListener('click', function () {
+    etat.phase = 'multiplication';
+    rendreTout();
+  });
+
+  document.getElementById('btn-vers-conversion').addEventListener('click', function () {
+    if (!etat.rows[1].every(function (v) { return v === 0; })) return;
+    etat.phase = 'conversion';
+    rendreTout();
+  });
+
+  document.getElementById('btn-recommencer').addEventListener('click', function () {
+    etat.phase = 'composition';
+    etat.rows = [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ];
+    afficherMessage('');
+    rendreTout();
+  });
+
+  document.querySelectorAll('.btn-vider').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (etat.phase !== 'composition') return;
+      var r = Number(btn.dataset.row);
+      etat.rows[r] = new Array(MAX_VILLAGES).fill(0);
+      rendreTout();
+    });
+  });
+
+  construirePlateau();
+  rendreTout();
+})();
+</script>
+
+</body>
+</html>
