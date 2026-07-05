@@ -303,17 +303,36 @@
     opacity: 0; max-height: 0; overflow: hidden;
     transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
   }
-  .succes-final.visible { opacity: 1; max-height: 260px; margin: 18px auto 20px; }
+  .succes-final.visible { opacity: 1; max-height: 320px; margin: 18px auto 20px; }
   .succes-final strong { display: block; font-size: 19px; margin-bottom: 4px; }
   .cadeau {
     display: inline-block; font-size: 42px; margin-bottom: 6px;
     animation: cadeau-bounce 0.7s ease;
   }
   .cadeau-etincelles { font-size: 18px; opacity: 0.85; }
+  .equation-finale {
+    display: inline-block; font-family: Georgia, serif; font-size: 17px; font-weight: bold;
+    color: var(--encre); background: var(--blanc); border: 1.5px solid var(--succes);
+    border-radius: 20px; padding: 5px 16px; margin-bottom: 10px;
+  }
   @keyframes cadeau-bounce {
     0% { transform: scale(0) rotate(-20deg); opacity: 0; }
     55% { transform: scale(1.2) rotate(8deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ============ PLUIE D'ÉTOILES (cadeau) ============ */
+  #pluie-etoiles {
+    position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 500;
+  }
+  .etoile-tombante {
+    position: absolute; top: -40px; line-height: 1;
+    animation-name: etoile-tombe; animation-timing-function: ease-in; animation-fill-mode: forwards;
+    text-shadow: 0 0 6px rgba(0,0,0,0.25);
+  }
+  @keyframes etoile-tombe {
+    from { transform: translateY(0) rotate(0deg); opacity: 1; }
+    to { transform: translateY(108vh) rotate(360deg); opacity: 0.15; }
   }
 
   /* ============ NOTE ============ */
@@ -327,6 +346,8 @@
 </style>
 </head>
 <body>
+
+<div id="pluie-etoiles" aria-hidden="true"></div>
 
 <header>
   <a class="retour" href="index.html">← Retour au parcours</a>
@@ -447,7 +468,9 @@
 
   var etat = {
     phase: 'composition', // composition | multiplication | conversion
-    rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ]
+    rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ],
+    multiplicateurOriginal: null,
+    cadeauDeclenche: false
   };
 
   function creerImg(chiffre) {
@@ -657,7 +680,13 @@
   function rendreTout() {
     for (var r = 0; r < 3; r++) {
       var row = etat.rows[r];
-      var idxActifMultiplicateur = (r === 1) ? premierVillageActif(row) : null;
+      var idxActifMultiplicateur = (r === 1) ? premierVillageActif(etat.rows[1]) : null;
+
+      // Une fois la multiplication faite, on réaffiche le multiplicateur d'origine
+      // (déjà consommé pion par pion) pour qu'on sache quels nombres ont servi.
+      if (r === 1 && etat.phase === 'conversion' && etat.multiplicateurOriginal) {
+        row = etat.multiplicateurOriginal;
+      }
 
       for (var pos = 1; pos <= MAX_VILLAGES; pos++) {
         var idx = pos - 1;
@@ -704,7 +733,7 @@
 
       var multiplicateurEpuise = etat.rows[1].every(function (v) { return v === 0; });
       var trousEl = document.querySelector('.trous[data-trous="' + r + '"]');
-      trousEl.classList.toggle('rangee-eteinte', r === 1 && etat.phase !== 'composition' && multiplicateurEpuise);
+      trousEl.classList.toggle('rangee-eteinte', r === 1 && etat.phase === 'multiplication' && multiplicateurEpuise);
 
       // lecture (arabe + lettres toujours exactes, quel que soit l'état des villages)
       var valeurLigne = valeurTotale(row);
@@ -721,7 +750,7 @@
       });
 
       var panneau = document.querySelector('.lecture-panel[data-panel="' + r + '"]');
-      panneau.classList.toggle('eteinte', r === 1 && etat.phase !== 'composition' && multiplicateurEpuise);
+      panneau.classList.toggle('eteinte', r === 1 && etat.phase === 'multiplication' && multiplicateurEpuise);
       var btnVider = document.querySelector('.btn-vider[data-row="' + r + '"]');
       if (btnVider) btnVider.disabled = etat.phase !== 'composition';
 
@@ -730,8 +759,9 @@
         if (r === 0) {
           role.textContent = '';
         } else if (r === 1) {
-          role.textContent = etat.phase === 'composition' ? ''
-            : (multiplicateurEpuise ? '— épuisé' : '— en cours');
+          if (etat.phase === 'composition') role.textContent = '';
+          else if (etat.phase === 'multiplication') role.textContent = multiplicateurEpuise ? '— épuisé' : '— en cours';
+          else role.textContent = '— multiplicateur utilisé';
         } else {
           role.textContent = etat.phase === 'conversion' ? '— en cours de rangement' : '';
         }
@@ -763,17 +793,48 @@
     if (conversionTerminee) {
       var texteA = document.querySelector('[data-lecture-arabe="2"]').textContent;
       var texteLettres = document.querySelector('[data-lecture-lettres="2"]').textContent;
+      var arabeModele = valeurTotale(etat.rows[0]).toLocaleString('fr-FR');
+      var arabeMultiplicateur = valeurTotale(etat.multiplicateurOriginal || etat.rows[1]).toLocaleString('fr-FR');
       succesEl.innerHTML =
         '<span class="cadeau">🎁</span><br>' +
+        '<span class="equation-finale">' + arabeModele + ' × ' + arabeMultiplicateur + ' = ' + texteA + '</span><br>' +
         '<strong>✓ ' + texteA + '</strong>' + texteLettres +
         '. <span class="cadeau-etincelles">✨ Bravo, ta multiplication est exacte ! Voici ton cadeau. ✨</span>';
       succesEl.classList.add('visible');
+      if (!etat.cadeauDeclenche) {
+        etat.cadeauDeclenche = true;
+        declencherPluieEtoiles();
+      }
     } else {
       succesEl.classList.remove('visible');
     }
   }
 
+  function declencherPluieEtoiles() {
+    var container = document.getElementById('pluie-etoiles');
+    if (!container) return;
+    var couleurs = ['#E7B96E', '#D8472B', '#2F7A4D', '#1E3A8A', '#D9A441', '#B4532F', '#FFFFFF'];
+    var formes = ['★', '✦', '✧', '⭐'];
+    var nombre = 32;
+    for (var i = 0; i < nombre; i++) {
+      (function () {
+        var etoile = document.createElement('span');
+        etoile.className = 'etoile-tombante';
+        etoile.textContent = formes[Math.floor(Math.random() * formes.length)];
+        etoile.style.left = (Math.random() * 100) + 'vw';
+        etoile.style.color = couleurs[Math.floor(Math.random() * couleurs.length)];
+        etoile.style.fontSize = (14 + Math.random() * 22) + 'px';
+        var duree = 2.4 + Math.random() * 2.2;
+        etoile.style.animationDuration = duree + 's';
+        etoile.style.animationDelay = (Math.random() * 0.8) + 's';
+        container.appendChild(etoile);
+        setTimeout(function () { etoile.remove(); }, (duree + 0.8) * 1000 + 200);
+      })();
+    }
+  }
+
   document.getElementById('btn-vers-multiplication').addEventListener('click', function () {
+    etat.multiplicateurOriginal = etat.rows[1].slice();
     etat.phase = 'multiplication';
     rendreTout();
   });
@@ -787,6 +848,8 @@
   document.getElementById('btn-recommencer').addEventListener('click', function () {
     etat.phase = 'composition';
     etat.rows = [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ];
+    etat.multiplicateurOriginal = null;
+    etat.cadeauDeclenche = false;
     afficherMessage('');
     rendreTout();
   });
