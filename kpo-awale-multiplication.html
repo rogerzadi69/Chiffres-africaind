@@ -463,6 +463,7 @@
   var MAX_VILLAGES = 7;
   var MAX_COMPOSITION = 9;
   var MAX_POINTS_AFFICHES = 72;
+  var MAX_VALEUR = Math.pow(10, MAX_VILLAGES) - 1;
 
   var NOMS_POSITION = ['unités', 'dizaines', 'centaines', 'mille', 'dix mille', 'cent mille', 'million'];
 
@@ -834,6 +835,14 @@
   }
 
   document.getElementById('btn-vers-multiplication').addEventListener('click', function () {
+    var produit = valeurTotale(etat.rows[0]) * valeurTotale(etat.rows[1]);
+    if (produit > MAX_VALEUR) {
+      afficherMessage(
+        'Impossible de continuer : ce produit (' + produit.toLocaleString('fr-FR') + ') dépasserait la capacité du plateau (9 999 999 au maximum, sur sept villages). Réduis le Modèle ou le multiplicateur avant de continuer.',
+        6000
+      );
+      return;
+    }
     etat.multiplicateurOriginal = etat.rows[1].slice();
     etat.phase = 'multiplication';
     rendreTout();
