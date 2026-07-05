@@ -313,6 +313,20 @@
     sonFrEnCours.play();
   }
 
+  // Lit chaque chiffre d'un nombre l'un après l'autre (ex. "42" -> "quatre" puis
+  // "deux"), pour le renforcement des Niveaux 1 et 2 : on n'a que les mots des
+  // dix chiffres, donc on lit le nombre chiffre par chiffre, comme on le fait
+  // déjà pour la lecture des glyphes, position par position.
+  function jouerSonsFrSequence(chiffres, index) {
+    index = index || 0;
+    if (index >= chiffres.length) return;
+    var d = chiffres[index];
+    if (!SONS_FR[d]) { jouerSonsFrSequence(chiffres, index + 1); return; }
+    var audio = new Audio(SONS_FR[d]);
+    audio.addEventListener('ended', function () { jouerSonsFrSequence(chiffres, index + 1); });
+    audio.play();
+  }
+
   // Petit signal sonore d'attention (pas une voix), synthétisé, joué à l'apparition
   // de chaque nouveau glyphe en Niveau 0 pour attirer l'oeil du joueur.
   var contexteAudio = null;
@@ -535,6 +549,7 @@
       b.classList.add('bonne');
       bonneDecouverte();
     } else if (niveau === 1) {
+      jouerSonFr(attendu);
       if (v === attendu) {
         b.classList.add('bonne');
         bonneReponse();
@@ -561,6 +576,7 @@
 
   document.getElementById('btn-valider').addEventListener('click', function () {
     if (verrouille || saisie.length === 0) return;
+    jouerSonsFrSequence(attendu.split(''));
     if (saisie === attendu) {
       bonneReponse();
     } else {
