@@ -317,13 +317,13 @@
   // "deux"), pour le renforcement des Niveaux 1 et 2 : on n'a que les mots des
   // dix chiffres, donc on lit le nombre chiffre par chiffre, comme on le fait
   // déjà pour la lecture des glyphes, position par position.
-  function jouerSonsFrSequence(chiffres, index) {
+  function jouerSonsFrSequence(chiffres, index, surTermine) {
     index = index || 0;
-    if (index >= chiffres.length) return;
+    if (index >= chiffres.length) { if (surTermine) surTermine(); return; }
     var d = chiffres[index];
-    if (!SONS_FR[d]) { jouerSonsFrSequence(chiffres, index + 1); return; }
+    if (!SONS_FR[d]) { jouerSonsFrSequence(chiffres, index + 1, surTermine); return; }
     var audio = new Audio(SONS_FR[d]);
-    audio.addEventListener('ended', function () { jouerSonsFrSequence(chiffres, index + 1); });
+    audio.addEventListener('ended', function () { jouerSonsFrSequence(chiffres, index + 1, surTermine); });
     audio.play();
   }
 
@@ -472,7 +472,6 @@
   function bonneReponse() {
     points++;
     reaction(['👏', '🌟', '✨', '💪', '🎈'][Math.floor(Math.random() * 5)]);
-    suivant();
   }
 
   function bonneDecouverte() {
@@ -487,7 +486,6 @@
     reaction('😢');
     elQuestion.classList.add('secoue');
     setTimeout(function () { elQuestion.classList.remove('secoue'); }, 450);
-    suivant();
   }
 
   function suivant(delai) {
@@ -560,6 +558,7 @@
         if (bonne) bonne.classList.add('bonne');
         mauvaiseReponse();
       }
+      suivant();
     } else {
       if (saisie.length < attendu.length) {
         saisie += v;
@@ -576,7 +575,7 @@
 
   document.getElementById('btn-valider').addEventListener('click', function () {
     if (verrouille || saisie.length === 0) return;
-    jouerSonsFrSequence(attendu.split(''));
+    verrouille = true;
     if (saisie === attendu) {
       bonneReponse();
     } else {
@@ -584,6 +583,9 @@
         saisie.split('').join(' ') + '</span> &nbsp;→&nbsp; ' + attendu.split('').join(' ');
       mauvaiseReponse();
     }
+    // On attend la fin de toute la lecture chiffre par chiffre, puis encore
+    // quelques secondes, avant de passer au nombre suivant.
+    jouerSonsFrSequence(attendu.split(''), 0, function () { suivant(1800); });
   });
 
   // ---------- Clavier physique ----------
