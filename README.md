@@ -16,6 +16,7 @@ de numération africain à logique constructive.
 | Atelier 2 | `kpo-awale-addition.html` | Kpo-awalé : additionner deux nombres (composition libre, association, conversion à gauche) |
 | Atelier 3 | `kpo-awale-soustraction.html` | Kpo-awalé : soustraire deux nombres (composition libre, retrait village par village, conversion à droite/emprunt) |
 | Atelier 4 | `kpo-awale-multiplication.html` | Kpo-awalé : multiplier deux nombres (Modèle × multiplicateur, recopie décalée, conversion à gauche) |
+| Atelier 5 | `kpo-awale-division.html` | Kpo-awalé : diviser deux nombres (Dividende ÷ Diviseur, fenêtre glissante, conversion en cascade, quotient qui se décale) |
 
 ## Utilisation
 
