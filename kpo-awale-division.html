@@ -219,22 +219,28 @@
     50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(216,71,43,0.9); }
   }
 
-  .village.emprunt-anime .trou { animation: emprunt-flash 0.7s ease; }
+  .village.emprunt-anime .trou { animation: emprunt-flash 0.8s ease-in-out infinite; }
   @keyframes emprunt-flash {
-    0% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(217,164,65,0.9), 0 0 24px 4px rgba(217,164,65,0.7); }
-    100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 1px 0 rgba(255,255,255,0.12); }
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(217,164,65,0.55), 0 0 14px 2px rgba(217,164,65,0.35); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 6px rgba(217,164,65,0.95), 0 0 28px 8px rgba(217,164,65,0.8); }
   }
 
-  .village.retrait-anime .trou { animation: retrait-flash 0.6s ease; }
+  .village.retrait-anime .trou { animation: retrait-flash 0.7s ease-in-out infinite; }
   @keyframes retrait-flash {
-    0% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 5px rgba(216,71,43,0.85), 0 0 26px 6px rgba(216,71,43,0.6); }
-    100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 1px 0 rgba(255,255,255,0.12); }
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(216,71,43,0.5), 0 0 14px 3px rgba(216,71,43,0.3); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 6px rgba(216,71,43,0.9), 0 0 28px 8px rgba(216,71,43,0.7); }
   }
 
-  .village.depot-anime .trou { animation: copie-flash 0.65s ease; }
+  .village.depot-anime .trou { animation: copie-flash 0.7s ease-in-out infinite; }
   @keyframes copie-flash {
-    0% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 5px rgba(47,122,77,0.9), 0 0 26px 6px rgba(47,122,77,0.65); }
-    100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), inset 0 -3px 6px rgba(255,255,255,0.05), 0 1px 0 rgba(255,255,255,0.12); }
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(47,122,77,0.5), 0 0 14px 3px rgba(47,122,77,0.3); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 6px rgba(47,122,77,0.9), 0 0 28px 8px rgba(47,122,77,0.7); }
+  }
+
+  .village.devient-reserve .trou { animation: reserve-flash 0.9s ease-in-out infinite; }
+  @keyframes reserve-flash {
+    0%, 100% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 4px rgba(30,58,138,0.5), 0 0 16px 3px rgba(30,58,138,0.35); }
+    50% { box-shadow: inset 0 8px 14px rgba(0,0,0,0.75), 0 0 0 6px rgba(30,58,138,0.9), 0 0 30px 8px rgba(30,58,138,0.65); }
   }
 
   .graines {
@@ -343,19 +349,25 @@
   .logigramme-enveloppe { overflow-x: auto; background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 18px; padding: 14px; }
   .logigramme-svg { display: block; margin: 0 auto; min-width: 760px; }
   .noeud-forme, .noeud-diamant {
-    fill: var(--papier); stroke: var(--encre); stroke-width: 2;
-    transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+    fill: var(--papier); stroke: var(--encre); stroke-width: 2.5;
+    transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease;
   }
-  .noeud-texte { font-family: Georgia, serif; font-size: 12.5px; fill: var(--encre); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
-  .arc-logigramme { fill: none; stroke: var(--encre-pale); stroke-width: 2; }
-  .arc-etiquette { font-family: Georgia, serif; font-size: 10.5px; fill: var(--encre-douce); }
+  .noeud-texte { font-family: Georgia, serif; font-size: 12.5px; fill: var(--encre); text-anchor: middle; dominant-baseline: middle; pointer-events: none; font-weight: 600; }
+  .arc-logigramme { fill: none; stroke: var(--encre); stroke-opacity: 0.55; stroke-width: 2.25; }
+  .arc-etiquette { font-family: Georgia, serif; font-size: 11px; font-style: italic; fill: var(--terre); font-weight: bold; }
   .noeud-diagramme.actif .noeud-forme,
   .noeud-diagramme.actif .noeud-diamant {
-    fill: var(--or); stroke: var(--terre); filter: drop-shadow(0 0 8px rgba(217,164,65,0.85));
+    fill: var(--or); stroke: var(--terre); stroke-width: 4;
+    filter: drop-shadow(0 0 14px rgba(217,164,65,1)) drop-shadow(0 0 28px rgba(217,164,65,0.7));
+    animation: pouls-noeud-actif 1.1s ease-in-out infinite;
+  }
+  @keyframes pouls-noeud-actif {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(217,164,65,0.9)) drop-shadow(0 0 20px rgba(217,164,65,0.5)); }
+    50% { filter: drop-shadow(0 0 20px rgba(217,164,65,1)) drop-shadow(0 0 38px rgba(217,164,65,0.85)); }
   }
   .noeud-diagramme.actif .noeud-texte { fill: #3a2415; font-weight: bold; }
-  .noeud-decimal .noeud-forme, .noeud-decimal .noeud-diamant { fill: var(--papier-fonce); stroke: var(--encre-pale); stroke-dasharray: 5 4; }
-  .noeud-decimal .noeud-texte { fill: var(--encre-pale); }
+  .noeud-decimal .noeud-forme, .noeud-decimal .noeud-diamant { fill: var(--papier-fonce); stroke: var(--encre-douce); stroke-dasharray: 5 4; }
+  .noeud-decimal .noeud-texte { fill: var(--encre-douce); font-style: italic; }
   .arc-decimal { stroke-dasharray: 4 4; }
 
   /* ============ NOTE ============ */
@@ -498,8 +510,8 @@
           <!-- MM -> MC_MR (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,205 L470,240"></path>
           <text class="arc-etiquette" x="486" y="225">Oui</text>
-          <!-- MM -> note Non (edge case) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M385,160 L300,160"></path>
+          <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M385,160 L15,160 L15,1420 L370,1420"></path>
           <text class="arc-etiquette" x="342" y="150">Non</text>
 
           <!-- MC_MR -> EB_SET (Oui) -->
@@ -523,10 +535,11 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,730 L150,770"></path>
           <text class="arc-etiquette" x="166" y="752">Oui</text>
           <!-- R_MR -> DEPL_ENTIER_B (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,680 L430,680"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,680 L405,680"></path>
           <text class="arc-etiquette" x="300" y="670">Non</text>
-          <!-- DEPL_ENTIER_B loops back up to MC_MR -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M700,650 L700,290 L565,290"></path>
+          <!-- DEPL_ENTIER_B revient au losange AV (pas à MC≥MR) : la fenêtre continue de s'élargir -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M630,680 L680,680 L680,420 L235,420"></path>
+          <text class="arc-etiquette" x="686" y="550" transform="rotate(-90 686 550)">retour à AV</text>
 
           <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,870 L150,920"></path>
@@ -576,7 +589,7 @@
           <polygon class="noeud-diamant" points="470,115 555,160 470,205 385,160"></polygon>
           <text class="noeud-texte" x="470" y="160">MM</text>
         </g>
-        <text class="arc-etiquette" x="470" y="230" text-anchor="middle" font-style="italic">Non → Quotient = 0 (résultat immédiat)</text>
+        <text class="arc-etiquette" x="20" y="145" font-size="9.5">Quotient = 0 (résultat immédiat)</text>
 
         <g class="noeud-diagramme" data-noeud="MC_MR">
           <polygon class="noeud-diamant" points="470,240 565,290 470,340 375,290"></polygon>
@@ -696,7 +709,8 @@
     dejaCalcule: false,  // EB : est-on déjà entré une fois dans la boucle principale ?
     generateur: null,    // le générateur JS qui rejoue le logigramme, pas à pas
     journal: [],         // historique des étapes affichées dans le panneau "journal"
-    noeudActif: null     // le nœud du logigramme actuellement en surbrillance
+    noeudActif: null,    // le nœud du logigramme actuellement en surbrillance
+    dernierNoeudDefile: null  // évite de refaire défiler la page vers un nœud déjà visé
   };
 
   var LIBELLES_NOEUDS = {
@@ -880,11 +894,11 @@
     return touches;
   }
 
-  function animerVillages(r, positionsPuissance, classe) {
+  function animerVillages(r, positionsPuissance, classe, duree) {
     positionsPuissance.forEach(function (p, ordre) {
       setTimeout(function () {
-        flashClasse(r, p + 1, classe, 700);
-      }, ordre * 170);
+        flashClasse(r, p + 1, classe, duree || 700);
+      }, ordre * 220);
     });
   }
 
@@ -905,43 +919,49 @@
 
       if (passe) {
         etat.dejaCalcule = true;
-        yield pas('EB_SET', 'Entree dans la boucle principale : EB = Oui.', {});
+        yield pas('EB_SET', 'Entrée dans la boucle principale : EB = Oui.', {});
       } else {
-        var lp = basFenetre();
-        var villageDispo = lp > 0;
-        yield pas('AV', 'Encore un village disponible a gauche du Dividende ? → ' + texteOuiNon(villageDispo), {});
-        if (!villageDispo) {
-          yield pas('RESULTAT', 'Plus aucun village disponible : l’operation s’arrete ici.', {});
-          etat.termine = true;
-          return;
-        }
-        var villagePuissance = lp - 1;
-        etat.windowShift++;
-        yield pas('AJUSTEMENT', 'Ajustement : la fenetre s’elargit d’un village vers la droite.', { village: villagePuissance });
+        // Boucle AV / Ajustement / R≥MR : si R≥MR répond Non, on revient ici même,
+        // au losange AV, pas à MC≥MR — la fenêtre continue de s'élargir village par village.
+        while (true) {
+          var lp = basFenetre();
+          var villageDispo = lp > 0;
+          yield pas('AV', 'Encore un village disponible à gauche du Dividende ? → ' + texteOuiNon(villageDispo), {});
+          if (!villageDispo) {
+            yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici.', {});
+            etat.termine = true;
+            return;
+          }
+          var villagePuissance = lp - 1;
+          var villageDevientReserve = hautFenetre();
+          etat.windowShift++;
+          yield pas('AJUSTEMENT', 'Ajustement : la fenêtre s’élargit d’un village vers la droite.', { village: villagePuissance, ancienHaut: villageDevientReserve });
 
-        var R2 = valeurPrefixe();
-        var passe2 = (R2 >= MRv);
-        yield pas('R_MR', 'R ≥ MR (reserve comprise) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
+          var R2 = valeurPrefixe();
+          var passe2 = (R2 >= MRv);
+          yield pas('R_MR', 'R ≥ MR (réserve comprise) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
 
-        if (!passe2) {
-          yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se decale quand meme, un 0 implicite a cette position.', {});
-          continue;
-        }
+          if (!passe2) {
+            yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se décale quand même, un 0 implicite à cette position.', {});
+            continue;
+          }
 
-        yield pas('EB_Q', 'Es-tu deja entre une fois dans la boucle principale ? → ' + texteOuiNon(etat.dejaCalcule), {});
-        if (etat.dejaCalcule) {
-          yield pas('DEPL_ENTIER', 'Deplacement Entier : le chiffre deja pose au Quotient glisse d’un cran vers la gauche.', {});
+          yield pas('EB_Q', 'Es-tu déjà entré une fois dans la boucle principale ? → ' + texteOuiNon(etat.dejaCalcule), {});
+          if (etat.dejaCalcule) {
+            yield pas('DEPL_ENTIER', 'Déplacement Entier : le chiffre déjà posé au Quotient glisse d’un cran vers la gauche.', {});
+          }
+          break;
         }
       }
 
       // Boucle interne MRG / Conversion, commune aux deux chemins ci-dessus.
       while (true) {
         var pDef = trouverDeficient();
-        yield pas('MRG', 'Meme Rangement ? La fenetre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
+        yield pas('MRG', 'Même Rangement ? La fenêtre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
         if (pDef === -1) break;
         var touches = convertirVers(pDef);
         if (touches === null) break;
-        yield pas('CONVERSION', 'Conversion : un pion emprunte plus a gauche devient dix pions pour le village en difficulte.', { touches: touches });
+        yield pas('CONVERSION', 'Conversion : un pion emprunté plus à gauche devient dix pions pour le village en difficulté.', { touches: touches });
       }
 
       var lp2 = basFenetre();
@@ -954,13 +974,22 @@
       yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
 
       etat.qtDigits[etat.windowShift] = (etat.qtDigits[etat.windowShift] || 0) + 1;
-      yield pas('DEPOT', '1 pion depose au Quotient, dans le village actif de la Rangee 3.', {});
+      yield pas('DEPOT', '1 pion déposé au Quotient, dans le village actif de la Rangée 3.', {});
 
       yield { finDeTour: true };
     }
   }
+  // Chaque nœud garde l'écran un temps différent : les conversions et les ajustements,
+  // les plus difficiles à suivre, restent affichés bien plus longtemps que les autres.
+  var DUREES_PAS = {
+    AJUSTEMENT: 2400,
+    CONVERSION: 2200,
+    CALC: 1700,
+    DEPOT: 1500
+  };
+  var DUREE_PAS_DEFAUT = 1300;
 
-  var DUREE_PAS_MS = 1000;
+  function dureePas(noeud) { return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT; }
 
   function ajouterJournal(p) {
     etat.journal.push(p);
@@ -969,14 +998,19 @@
 
   function declencherAnimationPlateau(p) {
     if (p.noeud === 'AJUSTEMENT') {
-      flashClasse(0, p.vars.village + 1, 'emprunt-anime', 700);
+      flashClasse(0, p.vars.village + 1, 'emprunt-anime', 1400);
+      // Le village qui sort de la fenêtre passe en réserve : c'est le village
+      // « en état de conversion » du logigramme papier — on le met bien en évidence.
+      if (etat.dividende[p.vars.ancienHaut] > 0) {
+        flashClasse(0, p.vars.ancienHaut + 1, 'devient-reserve', 2200);
+      }
     } else if (p.noeud === 'CONVERSION') {
       var uniques = p.vars.touches.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
-      animerVillages(0, uniques, 'emprunt-anime');
+      animerVillages(0, uniques, 'emprunt-anime', 1600);
     } else if (p.noeud === 'CALC') {
-      animerVillages(0, p.vars.positions, 'retrait-anime');
+      animerVillages(0, p.vars.positions, 'retrait-anime', 1200);
     } else if (p.noeud === 'DEPOT') {
-      flashClasse(2, 1, 'depot-anime', 650);
+      flashClasse(2, 1, 'depot-anime', 1200);
     }
   }
 
@@ -999,7 +1033,7 @@
     ajouterJournal(p);
     declencherAnimationPlateau(p);
     rendreTout();
-    setTimeout(avancerGenerateur, DUREE_PAS_MS);
+    setTimeout(avancerGenerateur, dureePas(p.noeud));
   }
 
   // Une etape de jeu = un clic sur le Diviseur : le generateur avance jusqu'au
@@ -1205,9 +1239,20 @@
   }
 
   function rendreLogigramme() {
+    var premierActif = null;
     document.querySelectorAll('.noeud-diagramme').forEach(function (el) {
-      el.classList.toggle('actif', etat.noeudActif !== null && el.dataset.noeud === etat.noeudActif);
+      var actif = etat.noeudActif !== null && el.dataset.noeud === etat.noeudActif;
+      el.classList.toggle('actif', actif);
+      if (actif && !premierActif) premierActif = el;
     });
+    // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
+    // toujours exactement où en est le raisonnement, même sur un long logigramme.
+    if (premierActif && etat.noeudActif !== etat.dernierNoeudDefile) {
+      etat.dernierNoeudDefile = etat.noeudActif;
+      if (typeof premierActif.scrollIntoView === 'function') {
+        premierActif.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      }
+    }
   }
 
   function valeurQuotient() {
@@ -1266,6 +1311,7 @@
     etat.generateur = null;
     etat.journal = [];
     etat.noeudActif = null;
+    etat.dernierNoeudDefile = null;
     afficherMessage('');
     rendreTout();
   });
