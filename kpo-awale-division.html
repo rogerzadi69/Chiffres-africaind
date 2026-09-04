@@ -269,6 +269,18 @@
   .village.avec-glyphe .badge-glyphes { opacity: 1; transform: scale(1); }
   .badge-glyphes img { width: 9px; height: 9px; filter: brightness(0) invert(1); }
 
+  /* EC = village en État de Conversion (réserve hors fenêtre MR, en attente de conversion à droite pour former R). */
+  .badge-ec {
+    position: absolute; top: -7px; left: -7px;
+    font-family: Georgia, 'Times New Roman', serif; font-size: 9px; font-weight: bold;
+    letter-spacing: 0.03em; color: var(--papier);
+    background: var(--or); border-radius: 8px; padding: 1px 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .village.reserve .badge-ec { opacity: 1; transform: scale(1); }
+
   /* ---- Colonne vertébrale centrale ---- */
   .colonne-vertebrale { margin: 16px 0 16px; }
   .arete {
@@ -351,6 +363,12 @@
     font-weight: normal; color: var(--terre); margin-bottom: 6px;
   }
   .logigramme-intro { text-align: center; font-size: 13px; font-style: italic; color: var(--encre-douce); max-width: 640px; margin: 0 auto 18px; }
+  .demo-bandeau {
+    text-align: center; font-size: 12.5px; font-weight: bold; letter-spacing: 0.03em;
+    color: var(--terre); background: var(--papier-fonce); border: 1.5px dashed var(--terre);
+    border-radius: 12px; padding: 7px 14px; max-width: 640px; margin: 0 auto 14px;
+  }
+  .journal-corps-demo { max-width: 720px; margin: 0 auto 14px; background: var(--papier-fonce); border: 1.5px solid var(--encre); border-radius: 14px; padding: 12px 16px; }
   .logigramme-enveloppe { overflow-x: auto; background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 18px; padding: 14px; }
   .logigramme-svg { display: block; margin: 0 auto; min-width: 760px; }
   .noeud-forme, .noeud-diamant {
@@ -425,7 +443,7 @@
     <ol>
       <li><strong>Composition libre.</strong> Compose le <strong>Dividende</strong> (rangée du haut) et le <strong>Diviseur</strong> (rangée du milieu), village par village. Aucun village ne dépasse neuf pions.</li>
       <li><strong>Retirer.</strong> Clique sur le Diviseur&nbsp;: s'il y a assez de pions dans la fenêtre éclairée du Dividende, le Diviseur y est retiré et un pion tombe dans le Quotient. S'il en manque, une conversion va chercher un pion plus loin à gauche et le change en dix, avant de retirer.</li>
-      <li><strong>Élargir la fenêtre.</strong> Quand il n'y a plus assez à retirer, le prochain village du Dividende s'allume&nbsp;: clique sur le Diviseur pour l'inclure dans la fenêtre, qui glisse d'un cran vers la droite. Le Quotient déjà posé se décale alors d'un cran vers la gauche, laissant sa place au prochain chiffre.</li>
+      <li><strong>Élargir la fenêtre.</strong> Quand il n'y a plus assez à retirer, le prochain village du Dividende s'allume&nbsp;: clique sur le Diviseur pour l'inclure dans la fenêtre, qui glisse d'un cran vers la droite. Le village qui vient de sortir du cadre porte alors le badge <strong>EC</strong> (village en <strong>É</strong>tat de <strong>C</strong>onversion)&nbsp;: il reste dans le MC et sera converti à droite pour aider à former R. Le Quotient déjà posé se décale alors d'un cran vers la gauche, laissant sa place au prochain chiffre.</li>
       <li><strong>La fin.</strong> Quand la fenêtre a atteint le dernier village et qu'on ne peut plus retirer, l'opération s'arrête&nbsp;: le Quotient et le Reste apparaissent.</li>
     </ol>
   </section>
@@ -524,11 +542,15 @@
 
   <section class="logigramme-section">
     <h2>Le logigramme de la division kpo-awalé</h2>
-    <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. À chaque clic, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
+    <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. Pendant ta partie, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
+    <p class="logigramme-intro">Tu peux aussi lancer une <strong>démonstration indépendante</strong> (111 ÷ 12) pour étudier la logique sans toucher à ta partie en cours&nbsp;: elle avance d'un seul cran à chaque clic, à ton rythme.</p>
     <div class="controles-phase">
-      <button class="btn-avancer" id="btn-auto-logigramme">▶ Dérouler le logigramme tout seul</button>
-      <button class="btn-recommencer" id="btn-stop-logigramme" hidden>■ Arrêter le déroulement</button>
+      <button class="btn-avancer" id="btn-demo-demarrer">▶ Démonstration pas à pas (111 ÷ 12)</button>
+      <button class="btn-avancer" id="btn-demo-suivant" hidden>Suivant →</button>
+      <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter la démonstration</button>
     </div>
+    <p class="demo-bandeau" id="demo-bandeau" hidden>Démonstration indépendante en cours — ta partie n'est pas modifiée.</p>
+    <div class="journal-corps journal-corps-demo" id="journal-demo-corps" hidden></div>
     <div class="logigramme-enveloppe">
       <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
       <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1400" xmlns="http://www.w3.org/2000/svg">
@@ -746,7 +768,7 @@
     dernierNoeudDefile: null,  // évite de refaire défiler la page vers un nœud déjà visé
     dividendeDepart: 0,   // valeur du Dividende au tout début, pour rappeler l'opération au résultat
     diviseurDepart: 0,
-    modeAuto: false       // vrai pendant un déroulement automatique du logigramme
+    demoActive: false     // vrai pendant que la démonstration indépendante du logigramme tourne
   };
 
   var LIBELLES_NOEUDS = {
@@ -854,6 +876,11 @@
         badgeGlyphes.className = 'badge-glyphes';
         trou.appendChild(badgeGlyphes);
 
+        var badgeEC = document.createElement('div');
+        badgeEC.className = 'badge-ec';
+        badgeEC.textContent = 'EC';
+        trou.appendChild(badgeEC);
+
         villageEl.appendChild(trou);
         conteneur.appendChild(villageEl);
 
@@ -886,44 +913,48 @@
   // ---- Moteur de la division ----
   // Le dividende est indexé par puissance de dix (idx 0 = unités), comme dans les autres ateliers.
   // hi = puissance la plus significative de la fenêtre active ; lp = puissance la moins significative.
-  function hautFenetre() { return etat.nD - 1 - etat.windowShift; }
-  function basFenetre() { return etat.nD - etat.m - etat.windowShift; }
+  // Ces fonctions de moteur prennent désormais un état explicite `s` (au lieu de fermer
+  // sur la variable globale `etat`) : ainsi la démonstration indépendante du logigramme
+  // peut rejouer exactement la même logique sur son propre état, sans jamais toucher
+  // au plateau ni à la partie en cours du joueur.
+  function hautFenetre(s) { return s.nD - 1 - s.windowShift; }
+  function basFenetre(s) { return s.nD - s.m - s.windowShift; }
 
-  function valeurPrefixe() {
-    var lp = basFenetre();
+  function valeurPrefixe(s) {
+    var lp = basFenetre(s);
     var v = 0;
-    for (var p = etat.nD - 1; p >= lp; p--) v = v * 10 + etat.dividende[p];
+    for (var p = s.nD - 1; p >= lp; p--) v = v * 10 + s.dividende[p];
     return v;
   }
 
-  function valeurMR() {
+  function valeurMR(s) {
     var v = 0;
-    for (var i = etat.m - 1; i >= 0; i--) v = v * 10 + etat.MR[i];
+    for (var i = s.m - 1; i >= 0; i--) v = v * 10 + s.MR[i];
     return v;
   }
 
   // Renvoie la position (puissance absolue) du village déficient le moins significatif de la fenêtre,
   // ou -1 si la fenêtre permet déjà le retrait, village par village.
-  function trouverDeficient() {
-    var lp = basFenetre();
-    for (var i = 0; i < etat.m; i++) {
+  function trouverDeficient(s) {
+    var lp = basFenetre(s);
+    for (var i = 0; i < s.m; i++) {
       var p = lp + i;
-      if (etat.dividende[p] < etat.MR[i]) return p;
+      if (s.dividende[p] < s.MR[i]) return p;
     }
     return -1;
   }
 
   // Cherche, à partir de p+1 vers la gauche (puissances croissantes), le premier village non vide,
   // puis fait descendre la conversion de proche en proche jusqu'au village p (qui reçoit dix pions).
-  function convertirVers(p) {
+  function convertirVers(s, p) {
     var q = p + 1;
-    while (q < MAX_VILLAGES && etat.dividende[q] === 0) q++;
+    while (q < MAX_VILLAGES && s.dividende[q] === 0) q++;
     if (q >= MAX_VILLAGES) return null;
 
     var touches = [];
     for (var j = q; j > p; j--) {
-      etat.dividende[j] -= 1;
-      etat.dividende[j - 1] += 10;
+      s.dividende[j] -= 1;
+      s.dividende[j - 1] += 10;
       touches.push(j - 1);
     }
     touches.push(q);
@@ -947,43 +978,45 @@
   // Le generateur rejoue exactement le logigramme, un noeud a la fois : chaque `yield`
   // correspond a un losange ou un rectangle du schema. Un clic sur le Diviseur fait
   // avancer ce generateur jusqu'au prochain "fin de tour" (un depot, ou la fin de tout).
-  function* genererDivision() {
+  // Il prend en paramètre l'état sur lequel rejouer (la partie réelle, ou l'état séparé
+  // de la démonstration indépendante) : le moteur logique est le même dans les deux cas.
+  function* genererDivision(s) {
     while (true) {
-      var R = valeurPrefixe(), MRv = valeurMR();
+      var R = valeurPrefixe(s), MRv = valeurMR(s);
       var passe = (R >= MRv);
       yield pas('MC_MR', 'MC ≥ MR ? ' + R.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe), { MC: R, MR: MRv });
 
       if (passe) {
-        etat.dejaCalcule = true;
+        s.dejaCalcule = true;
         yield pas('EB_SET', 'Entrée dans la boucle principale : EB = Oui.', {});
       } else {
         // Boucle AV / Ajustement / R≥MR : si R≥MR répond Non, on revient ici même,
         // au losange AV, pas à MC≥MR — la fenêtre continue de s'élargir village par village.
         while (true) {
-          var lp = basFenetre();
+          var lp = basFenetre(s);
           var villageDispo = lp > 0;
-          yield pas('AV', 'Autre village dans le Dividende ? → ' + texteOuiNon(villageDispo), {});
+          yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
           if (!villageDispo) {
             yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici.', {});
-            etat.termine = true;
+            s.termine = true;
             return;
           }
           var villagePuissance = lp - 1;
-          var villageDevientReserve = hautFenetre();
-          etat.windowShift++;
-          yield pas('AJUSTEMENT', 'Ajustement : la fenêtre s’élargit d’un village vers la droite.', { village: villagePuissance, ancienHaut: villageDevientReserve });
+          var villageDevientReserve = hautFenetre(s);
+          s.windowShift++;
+          yield pas('AJUSTEMENT', 'Ajustement : le village qui sort du cadre du MR devient EC (village en État de Conversion) — il reste dans le MC et sera converti à droite pour aider à former R.', { village: villagePuissance, ancienHaut: villageDevientReserve });
 
-          var R2 = valeurPrefixe();
+          var R2 = valeurPrefixe(s);
           var passe2 = (R2 >= MRv);
-          yield pas('R_MR', 'R ≥ MR (réserve comprise) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
+          yield pas('R_MR', 'R ≥ MR (EC converti et compris dans R) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
 
           if (!passe2) {
             yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se décale quand même, un 0 implicite à cette position.', {});
             continue;
           }
 
-          yield pas('EB_Q', 'Es-tu déjà entré une fois dans la boucle principale ? → ' + texteOuiNon(etat.dejaCalcule), {});
-          if (etat.dejaCalcule) {
+          yield pas('EB_Q', 'Es-tu déjà entré une fois dans la boucle principale ? → ' + texteOuiNon(s.dejaCalcule), {});
+          if (s.dejaCalcule) {
             yield pas('DEPL_ENTIER', 'Déplacement Entier : le chiffre déjà posé au Quotient glisse d’un cran vers la gauche.', {});
           }
           break;
@@ -992,24 +1025,24 @@
 
       // Boucle interne MRG / Conversion, commune aux deux chemins ci-dessus.
       while (true) {
-        var pDef = trouverDeficient();
+        var pDef = trouverDeficient(s);
         yield pas('MRG', 'Même Rangement ? La fenêtre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
         if (pDef === -1) break;
-        var touches = convertirVers(pDef);
+        var touches = convertirVers(s, pDef);
         if (touches === null) break;
         yield pas('CONVERSION', 'Conversion : un pion emprunté plus à gauche devient dix pions pour le village en difficulté.', { touches: touches });
       }
 
-      var lp2 = basFenetre();
+      var lp2 = basFenetre(s);
       var positionsFenetre = [];
-      for (var i = 0; i < etat.m; i++) positionsFenetre.push(lp2 + i);
-      var avantVal = valeurPrefixe();
-      var mrVal = valeurMR();
-      for (var k = 0; k < etat.m; k++) etat.dividende[lp2 + k] -= etat.MR[k];
-      var apresVal = valeurPrefixe();
+      for (var i = 0; i < s.m; i++) positionsFenetre.push(lp2 + i);
+      var avantVal = valeurPrefixe(s);
+      var mrVal = valeurMR(s);
+      for (var k = 0; k < s.m; k++) s.dividende[lp2 + k] -= s.MR[k];
+      var apresVal = valeurPrefixe(s);
       yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
 
-      etat.qtDigits[etat.windowShift] = (etat.qtDigits[etat.windowShift] || 0) + 1;
+      s.qtDigits[s.windowShift] = (s.qtDigits[s.windowShift] || 0) + 1;
       yield pas('DEPOT', '1 pion déposé au Quotient, dans le village actif de la Rangée 3.', {});
 
       yield { finDeTour: true };
@@ -1025,19 +1058,7 @@
   };
   var DUREE_PAS_DEFAUT = 1300;
 
-  // En déroulement automatique (bouton dédié, sans plateau à cliquer), on prend
-  // encore plus le temps de montrer chaque losange, rectangle et flèche.
-  var DUREES_PAS_AUTO = {
-    AJUSTEMENT: 3400,
-    CONVERSION: 3200,
-    CALC: 2600,
-    DEPOT: 2400
-  };
-  var DUREE_PAS_DEFAUT_AUTO = 2200;
-  var PAUSE_ENTRE_TOURS_AUTO = 900;
-
   function dureePas(noeud) {
-    if (etat.modeAuto) return DUREES_PAS_AUTO[noeud] || DUREE_PAS_DEFAUT_AUTO;
     return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT;
   }
 
@@ -1064,18 +1085,11 @@
     }
   }
 
-  function arreterModeAuto() {
-    etat.modeAuto = false;
-    document.getElementById('btn-auto-logigramme').hidden = false;
-    document.getElementById('btn-stop-logigramme').hidden = true;
-  }
-
   function avancerGenerateur() {
     var resultat = etat.generateur.next();
     if (resultat.done) {
       etat.enAnimation = false;
       etat.noeudActif = null;
-      if (etat.modeAuto) arreterModeAuto();
       rendreTout();
       return;
     }
@@ -1084,10 +1098,6 @@
       etat.enAnimation = false;
       etat.noeudActif = null;
       rendreTout();
-      if (etat.modeAuto) {
-        etat.enAnimation = true;
-        setTimeout(avancerGenerateur, PAUSE_ENTRE_TOURS_AUTO);
-      }
       return;
     }
     etat.noeudActif = p.noeud;
@@ -1100,47 +1110,132 @@
   // Une etape de jeu = un clic sur le Diviseur : le generateur avance jusqu'au
   // prochain depot (ou jusqu'a la fin), en devoilant une variable a la fois.
   function etapeDivision() {
-    if (etat.enAnimation || etat.phase !== 'division' || etat.termine) return;
-    if (!etat.generateur) etat.generateur = genererDivision();
+    if (etat.enAnimation || etat.demoActive || etat.phase !== 'division' || etat.termine) return;
+    if (!etat.generateur) etat.generateur = genererDivision(etat);
     etat.enAnimation = true;
     avancerGenerateur();
   }
 
-  // Déroulement automatique et indépendant du logigramme : plus besoin de cliquer
-  // sur le Diviseur à chaque tour, tout s'enchaîne tout seul jusqu'au résultat.
-  function lancerLogigrammeAuto() {
-    if (etat.enAnimation) return;
+  // ============ DÉMONSTRATION INDÉPENDANTE DU LOGIGRAMME ============
+  // Entièrement détachée de la partie en cours : son propre état (etatDemo), son propre
+  // générateur, sur un exemple fixe (111 ÷ 12) — elle ne lit ni ne modifie jamais `etat`,
+  // le plateau à pions, le Dividende ou le Diviseur composés par le joueur. Elle partage
+  // seulement le schéma SVG et la bulle (un seul exemplaire sur la page), et se met en
+  // pause dès que la partie réelle est restaurée (voir quitterDemo).
+  var etatDemo = null;
 
-    if (etat.phase === 'composition') {
-      var nD0 = largeurSignificative(etat.dividende);
-      var m0 = largeurSignificative(etat.diviseur);
-      if (m0 === 0) { afficherMessage('Compose d’abord un Diviseur différent de zéro.'); return; }
-      if (nD0 === 0) { afficherMessage('Compose d’abord un Dividende différent de zéro.'); return; }
-      document.getElementById('btn-vers-division').click();
-    }
-
-    if (etat.termine || etat.phase !== 'division') return;
-
-    etat.modeAuto = true;
-    document.getElementById('btn-auto-logigramme').hidden = true;
-    document.getElementById('btn-stop-logigramme').hidden = false;
-    var enveloppeAuto = document.querySelector('.logigramme-enveloppe');
-    if (typeof enveloppeAuto.scrollIntoView === 'function') {
-      enveloppeAuto.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    if (!etat.generateur) etat.generateur = genererDivision();
-    etat.enAnimation = true;
-    setTimeout(avancerGenerateur, PAUSE_ENTRE_TOURS_AUTO);
+  function creerEtatDemo() {
+    var s = {
+      dividende: new Array(MAX_VILLAGES).fill(0),
+      diviseur: new Array(MAX_VILLAGES).fill(0),
+      MR: [], m: 0, nD: 0, windowShift: 0, qtDigits: {},
+      dejaCalcule: false, termine: false, generateur: null,
+      journal: [], noeudActif: null, dernierNoeudDefile: null,
+      dividendeDepart: 0, diviseurDepart: 0
+    };
+    s.dividende[0] = 1; s.dividende[1] = 1; s.dividende[2] = 1; // 111
+    s.diviseur[0] = 2; s.diviseur[1] = 1; // 12
+    s.nD = largeurSignificative(s.dividende);
+    s.m = largeurSignificative(s.diviseur);
+    s.MR = s.diviseur.slice(0, s.m);
+    s.dividendeDepart = valeurTotale(s.dividende);
+    s.diviseurDepart = valeurTotale(s.diviseur);
+    return s;
   }
 
-  document.getElementById('btn-auto-logigramme').addEventListener('click', lancerLogigrammeAuto);
-  document.getElementById('btn-stop-logigramme').addEventListener('click', arreterModeAuto);
+  function rendreJournalDemo() {
+    var conteneur = document.getElementById('journal-demo-corps');
+    if (!conteneur || !etatDemo) return;
+    conteneur.innerHTML = '';
+    etatDemo.journal.forEach(function (p) {
+      var ligne = document.createElement('div');
+      ligne.className = 'journal-ligne';
+      var badge = document.createElement('span');
+      badge.className = 'journal-badge';
+      badge.textContent = LIBELLES_NOEUDS[p.noeud] || p.noeud;
+      var texte = document.createElement('span');
+      texte.className = 'journal-texte';
+      texte.textContent = p.texte;
+      ligne.appendChild(badge);
+      ligne.appendChild(texte);
+      conteneur.appendChild(ligne);
+    });
+    conteneur.scrollTop = conteneur.scrollHeight;
+  }
+
+  function rendreDemo() {
+    rendreJournalDemo();
+    rendreLogigramme(etatDemo);
+  }
+
+  function demarrerDemo() {
+    if (etat.enAnimation || etat.demoActive) return;
+    etat.demoActive = true;
+    rendreTout(); // fige visuellement le plateau réel (plus aucun village cliquable) avant de basculer le schéma sur la démo
+    etatDemo = creerEtatDemo();
+    etatDemo.generateur = genererDivision(etatDemo);
+
+    var mm = etatDemo.nD >= etatDemo.m;
+    etatDemo.journal.push(pas('MM', 'MM : le Dividende a-t-il au moins autant de villages que le Diviseur (' + etatDemo.m + ') → ' + texteOuiNon(mm), {}));
+    etatDemo.noeudActif = 'MM';
+
+    document.getElementById('btn-demo-demarrer').hidden = true;
+    document.getElementById('btn-demo-suivant').hidden = false;
+    document.getElementById('btn-demo-quitter').hidden = false;
+    document.getElementById('demo-bandeau').hidden = false;
+    document.getElementById('journal-demo-corps').hidden = false;
+    var enveloppeDemo = document.querySelector('.logigramme-enveloppe');
+    if (typeof enveloppeDemo.scrollIntoView === 'function') {
+      enveloppeDemo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    rendreDemo();
+  }
+
+  // Un clic = un seul nœud du logigramme qui s'allume : les repères de fin de tour
+  // (`finDeTour`), qui ne correspondent à aucune case visible du schéma, sont sautés
+  // automatiquement pour qu'aucun clic ne « tombe dans le vide ».
+  function avancerDemo() {
+    if (!etatDemo || etatDemo.noeudActif === 'RESULTAT') return;
+    var resultat;
+    do {
+      resultat = etatDemo.generateur.next();
+    } while (!resultat.done && resultat.value.finDeTour);
+
+    if (resultat.done) {
+      etatDemo.noeudActif = null;
+      document.getElementById('btn-demo-suivant').hidden = true;
+      rendreDemo();
+      return;
+    }
+    var p = resultat.value;
+    etatDemo.noeudActif = p.noeud;
+    etatDemo.journal.push(p);
+    rendreDemo();
+    if (p.noeud === 'RESULTAT') {
+      document.getElementById('btn-demo-suivant').hidden = true;
+    }
+  }
+
+  function quitterDemo() {
+    etat.demoActive = false;
+    etatDemo = null;
+    document.getElementById('btn-demo-demarrer').hidden = false;
+    document.getElementById('btn-demo-suivant').hidden = true;
+    document.getElementById('btn-demo-quitter').hidden = true;
+    document.getElementById('demo-bandeau').hidden = true;
+    document.getElementById('journal-demo-corps').hidden = true;
+    etat.dernierNoeudDefile = null;
+    rendreTout(); // restaure le schéma et la bulle sur l'état réel de la partie
+  }
+
+  document.getElementById('btn-demo-demarrer').addEventListener('click', demarrerDemo);
+  document.getElementById('btn-demo-suivant').addEventListener('click', avancerDemo);
+  document.getElementById('btn-demo-quitter').addEventListener('click', quitterDemo);
 
 
   function onPitClick(r, pos) {
     var idx = pos - 1;
-    if (etat.enAnimation) return;
+    if (etat.enAnimation || etat.demoActive) return;
 
     if (etat.phase === 'composition') {
       if (r === 2) return; // le Quotient ne se compose pas librement
@@ -1167,8 +1262,8 @@
   }
 
   function rendreTout() {
-    var lp = (etat.phase !== 'composition') ? basFenetre() : -1;
-    var hi = (etat.phase !== 'composition') ? hautFenetre() : -1;
+    var lp = (etat.phase !== 'composition') ? basFenetre(etat) : -1;
+    var hi = (etat.phase !== 'composition') ? hautFenetre(etat) : -1;
 
     for (var r = 0; r < 3; r++) {
       var rowAffichee; // valeurs à afficher village par village (7 cases)
@@ -1194,15 +1289,17 @@
         var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
 
         var estActif = false, attireFusion = false, horsJeu = false, dansFenetre = false, enReserve = false;
+        // Rien n'est cliquable pendant une animation ni pendant la démonstration indépendante,
+        // mais la fenêtre active et le badge EC (village en réserve) doivent rester visibles
+        // pendant tout le déroulement pas à pas, pas seulement entre deux tours.
+        var cliquable = !etat.enAnimation && !etat.demoActive;
 
-        if (etat.enAnimation) {
-          // rien n'est cliquable pendant une animation
-        } else if (etat.phase === 'composition') {
-          estActif = (r === 0 || r === 1);
+        if (etat.phase === 'composition') {
+          estActif = cliquable && (r === 0 || r === 1);
         } else if (etat.phase === 'division' && !etat.termine) {
           if (r === 1) {
-            estActif = true;
-            attireFusion = (idx >= lp && idx <= hi);
+            estActif = cliquable;
+            attireFusion = cliquable && (idx >= lp && idx <= hi);
           }
           if (r === 0) {
             dansFenetre = (idx >= lp && idx <= hi);
@@ -1243,7 +1340,7 @@
       // lecture (arabe + lettres)
       var valeurLigne;
       if (r === 0) valeurLigne = valeurTotale(etat.dividende);
-      else if (r === 1) valeurLigne = (etat.phase === 'composition') ? valeurTotale(etat.diviseur) : valeurMR();
+      else if (r === 1) valeurLigne = (etat.phase === 'composition') ? valeurTotale(etat.diviseur) : valeurMR(etat);
       else valeurLigne = valeurQuotient();
 
       document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = valeurLigne.toLocaleString('fr-FR');
@@ -1305,7 +1402,7 @@
     }
 
     rendreJournal();
-    rendreLogigramme();
+    rendreLogigramme(etat);
   }
 
   function rendreJournal() {
@@ -1332,38 +1429,41 @@
     conteneur.scrollTop = conteneur.scrollHeight;
   }
 
-  function rendreLogigramme() {
+  // Un seul schéma SVG existe sur la page : il reflète soit la partie réelle (s = etat),
+  // soit la démonstration indépendante (s = etatDemo), jamais les deux à la fois — la partie
+  // et la démo se bloquent mutuellement pendant que l'une des deux tourne (voir demoActive).
+  function rendreLogigramme(s) {
     var premierActif = null;
     document.querySelectorAll('.noeud-diagramme').forEach(function (el) {
-      var actif = etat.noeudActif !== null && el.dataset.noeud === etat.noeudActif;
+      var actif = s.noeudActif !== null && el.dataset.noeud === s.noeudActif;
       el.classList.toggle('actif', actif);
       if (actif && !premierActif) premierActif = el;
     });
     // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée.
     document.querySelectorAll('.arc-logigramme').forEach(function (el) {
-      el.classList.toggle('actif', etat.noeudActif !== null && el.dataset.vers === etat.noeudActif);
+      el.classList.toggle('actif', s.noeudActif !== null && el.dataset.vers === s.noeudActif);
     });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
     // toujours exactement où en est le raisonnement, même sur un long logigramme.
-    if (premierActif && etat.noeudActif !== etat.dernierNoeudDefile) {
-      etat.dernierNoeudDefile = etat.noeudActif;
+    if (premierActif && s.noeudActif !== s.dernierNoeudDefile) {
+      s.dernierNoeudDefile = s.noeudActif;
       if (typeof premierActif.scrollIntoView === 'function') {
         premierActif.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
       }
     }
-    positionnerBulle(premierActif);
+    positionnerBulle(premierActif, s);
   }
 
   // La bulle flotte juste au-dessus du nœud actif et reprend le texte de la
   // dernière ligne du journal : les variables suivent le déplacement de la logique.
-  function positionnerBulle(elementActif) {
+  function positionnerBulle(elementActif, s) {
     var bulle = document.getElementById('bulle-logigramme');
     var enveloppe = document.querySelector('.logigramme-enveloppe');
-    if (!elementActif || !etat.noeudActif || etat.journal.length === 0) {
+    if (!elementActif || !s.noeudActif || s.journal.length === 0) {
       bulle.hidden = true;
       return;
     }
-    var derniere = etat.journal[etat.journal.length - 1];
+    var derniere = s.journal[s.journal.length - 1];
     bulle.textContent = derniere.texte;
     bulle.hidden = false;
 
@@ -1386,6 +1486,7 @@
   }
 
   document.getElementById('btn-vers-division').addEventListener('click', function () {
+    if (etat.demoActive) return;
     var nD = largeurSignificative(etat.dividende);
     var m = largeurSignificative(etat.diviseur);
     if (m === 0) {
@@ -1422,6 +1523,7 @@
   });
 
   document.getElementById('btn-recommencer').addEventListener('click', function () {
+    if (etat.demoActive) return;
     etat.generation++;
     etat.phase = 'composition';
     etat.dividende = new Array(MAX_VILLAGES).fill(0);
@@ -1440,14 +1542,13 @@
     etat.dernierNoeudDefile = null;
     etat.dividendeDepart = 0;
     etat.diviseurDepart = 0;
-    etat.modeAuto = false;
     afficherMessage('');
     rendreTout();
   });
 
   document.querySelectorAll('.btn-vider').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      if (etat.phase !== 'composition') return;
+      if (etat.phase !== 'composition' || etat.demoActive) return;
       var r = Number(btn.dataset.row);
       if (r === 0) etat.dividende = new Array(MAX_VILLAGES).fill(0);
       if (r === 1) etat.diviseur = new Array(MAX_VILLAGES).fill(0);
