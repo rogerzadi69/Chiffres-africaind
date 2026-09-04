@@ -314,6 +314,50 @@
   .succes-final.visible { opacity: 1; max-height: 320px; margin: 18px auto 20px; }
   .succes-final strong { display: block; font-size: 19px; margin-bottom: 4px; }
 
+  /* ============ JOURNAL DES VARIABLES ============ */
+  .journal {
+    max-width: 720px; margin: 26px auto 0; background: var(--papier-fonce);
+    border: 1.5px solid var(--encre); border-radius: 18px; padding: 16px 20px;
+  }
+  .journal h2 { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: normal; color: var(--terre); margin-bottom: 10px; }
+  .journal-corps {
+    max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .journal-ligne { display: flex; gap: 10px; align-items: baseline; animation: journal-entree 0.3s ease; }
+  @keyframes journal-entree { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .journal-badge {
+    flex: 0 0 auto; min-width: 74px; text-align: center; font-size: 10.5px; letter-spacing: 0.03em;
+    background: var(--terre); color: #fff; border-radius: 10px; padding: 3px 6px;
+  }
+  .journal-texte { color: var(--encre-douce); }
+  .journal-vide { color: var(--encre-pale); font-style: italic; font-size: 13px; }
+
+  /* ============ LOGIGRAMME ============ */
+  .logigramme-section { max-width: 1000px; margin: 34px auto 0; }
+  .logigramme-section h2 {
+    text-align: center; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    font-weight: normal; color: var(--terre); margin-bottom: 6px;
+  }
+  .logigramme-intro { text-align: center; font-size: 13px; font-style: italic; color: var(--encre-douce); max-width: 640px; margin: 0 auto 18px; }
+  .logigramme-enveloppe { overflow-x: auto; background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 18px; padding: 14px; }
+  .logigramme-svg { display: block; margin: 0 auto; min-width: 760px; }
+  .noeud-forme, .noeud-diamant {
+    fill: var(--papier); stroke: var(--encre); stroke-width: 2;
+    transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+  }
+  .noeud-texte { font-family: Georgia, serif; font-size: 12.5px; fill: var(--encre); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+  .arc-logigramme { fill: none; stroke: var(--encre-pale); stroke-width: 2; }
+  .arc-etiquette { font-family: Georgia, serif; font-size: 10.5px; fill: var(--encre-douce); }
+  .noeud-diagramme.actif .noeud-forme,
+  .noeud-diagramme.actif .noeud-diamant {
+    fill: var(--or); stroke: var(--terre); filter: drop-shadow(0 0 8px rgba(217,164,65,0.85));
+  }
+  .noeud-diagramme.actif .noeud-texte { fill: #3a2415; font-weight: bold; }
+  .noeud-decimal .noeud-forme, .noeud-decimal .noeud-diamant { fill: var(--papier-fonce); stroke: var(--encre-pale); stroke-dasharray: 5 4; }
+  .noeud-decimal .noeud-texte { fill: var(--encre-pale); }
+  .arc-decimal { stroke-dasharray: 4 4; }
+
   /* ============ NOTE ============ */
   .apropos {
     max-width: 720px; margin: 20px auto 0; background: var(--papier-fonce);
@@ -429,6 +473,198 @@
 
   <p class="succes-final" id="succes-final"></p>
 
+  <section class="journal">
+    <h2>Le raisonnement, variable après variable</h2>
+    <div class="journal-corps" id="journal-corps">
+      <p class="journal-vide" id="journal-vide">Compose le Dividende et le Diviseur, puis clique sur « Passer à la division » — chaque décision du jeu s'affichera ici, l'une après l'autre.</p>
+    </div>
+  </section>
+
+  <section class="logigramme-section">
+    <h2>Le logigramme de la division kpo-awalé</h2>
+    <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. À chaque clic, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
+    <div class="logigramme-enveloppe">
+      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1720" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--encre-pale)"></path>
+          </marker>
+        </defs>
+
+        <!-- ===== Arcs (dessinés avant les nœuds, pour passer dessous) ===== -->
+        <g>
+          <!-- DEBUT -> MM -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,80 L470,115"></path>
+          <!-- MM -> MC_MR (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,205 L470,240"></path>
+          <text class="arc-etiquette" x="486" y="225">Oui</text>
+          <!-- MM -> note Non (edge case) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M385,160 L300,160"></path>
+          <text class="arc-etiquette" x="342" y="150">Non</text>
+
+          <!-- MC_MR -> EB_SET (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,340 L470,390"></path>
+          <text class="arc-etiquette" x="486" y="370">Oui</text>
+          <!-- MC_MR -> AV (Non) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M375,290 L150,290 L150,370"></path>
+          <text class="arc-etiquette" x="230" y="280">Non</text>
+
+          <!-- AV -> AJUSTEMENT (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,470 L150,525"></path>
+          <text class="arc-etiquette" x="166" y="500">Oui</text>
+          <!-- AV -> RESULTAT (Non), longe la marge gauche -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M65,420 L30,420 L30,1420 L370,1420"></path>
+          <text class="arc-etiquette" x="36" y="900" transform="rotate(-90 36 900)">Non</text>
+
+          <!-- AJUSTEMENT -> R_MR -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,595 L150,630"></path>
+
+          <!-- R_MR -> EB_Q (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,730 L150,770"></path>
+          <text class="arc-etiquette" x="166" y="752">Oui</text>
+          <!-- R_MR -> DEPL_ENTIER_B (Non) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,680 L430,680"></path>
+          <text class="arc-etiquette" x="300" y="670">Non</text>
+          <!-- DEPL_ENTIER_B loops back up to MC_MR -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M700,650 L700,290 L565,290"></path>
+
+          <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,870 L150,920"></path>
+          <text class="arc-etiquette" x="166" y="898">Oui</text>
+          <!-- EB_Q -> MRG directement (Non) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,830 L400,830 L400,1060 L375,1060"></path>
+          <text class="arc-etiquette" x="300" y="820">Non</text>
+          <!-- DEPL_ENTIER_A -> MRG -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,980 L150,1060 L375,1060"></path>
+
+          <!-- EB_SET -> MRG -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,450 L470,1010"></path>
+
+          <!-- MRG -> CONVERSION (Non), boucle par au-dessus -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M565,1060 L660,1060"></path>
+          <text class="arc-etiquette" x="600" y="1050">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1025 L760,975 L470,975 L470,1010"></path>
+
+          <!-- MRG -> CALC (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1110 L470,1160"></path>
+          <text class="arc-etiquette" x="486" y="1140">Oui</text>
+
+          <!-- CALC -> DEPOT -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1220 L470,1260"></path>
+
+          <!-- DEPOT loops back up to MC_MR -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M590,1290 L880,1290 L880,290 L565,290"></path>
+
+          <!-- RESULTAT -> CTN -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1450 L470,1485"></path>
+
+          <!-- CTN -> FIN (Non) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1575 L470,1620"></path>
+          <text class="arc-etiquette" x="486" y="1600">Non</text>
+          <!-- CTN -> partie décimale (Oui), pas encore jouable -->
+          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M555,1530 L620,1530"></path>
+          <text class="arc-etiquette" x="575" y="1520">Oui</text>
+        </g>
+
+        <!-- ===== Nœuds ===== -->
+        <g class="noeud-diagramme" data-noeud="DEBUT">
+          <rect class="noeud-forme" x="370" y="20" width="200" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="50">DÉBUT</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="MM">
+          <polygon class="noeud-diamant" points="470,115 555,160 470,205 385,160"></polygon>
+          <text class="noeud-texte" x="470" y="160">MM</text>
+        </g>
+        <text class="arc-etiquette" x="470" y="230" text-anchor="middle" font-style="italic">Non → Quotient = 0 (résultat immédiat)</text>
+
+        <g class="noeud-diagramme" data-noeud="MC_MR">
+          <polygon class="noeud-diamant" points="470,240 565,290 470,340 375,290"></polygon>
+          <text class="noeud-texte" x="470" y="290">MC ≥ MR ?</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="EB_SET">
+          <rect class="noeud-forme" x="360" y="390" width="220" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="420">EB = Oui</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="AV">
+          <polygon class="noeud-diamant" points="150,370 235,420 150,470 65,420"></polygon>
+          <text class="noeud-texte" x="150" y="420">AV ?</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="AJUSTEMENT">
+          <rect class="noeud-forme" x="40" y="525" width="220" height="70" rx="14"></rect>
+          <text class="noeud-texte" x="150" y="552">AJUSTEMENT</text>
+          <text class="noeud-texte" x="150" y="572" font-size="10.5" font-style="italic">la fenêtre s'élargit</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="R_MR">
+          <polygon class="noeud-diamant" points="150,630 245,680 150,730 55,680"></polygon>
+          <text class="noeud-texte" x="150" y="680">R ≥ MR ?</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="DEPL_ENTIER">
+          <rect class="noeud-forme" x="410" y="650" width="220" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="520" y="680">DÉPL. ENTIER</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="EB_Q">
+          <polygon class="noeud-diamant" points="150,770 245,820 150,870 55,820"></polygon>
+          <text class="noeud-texte" x="150" y="812">Déjà dans</text>
+          <text class="noeud-texte" x="150" y="828">la boucle ?</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="DEPL_ENTIER">
+          <rect class="noeud-forme" x="40" y="920" width="220" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="150" y="950">DÉPL. ENTIER</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="MRG">
+          <polygon class="noeud-diamant" points="470,1010 565,1060 470,1110 375,1060"></polygon>
+          <text class="noeud-texte" x="470" y="1060">MRG ?</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="CONVERSION">
+          <rect class="noeud-forme" x="660" y="1025" width="200" height="70" rx="14"></rect>
+          <text class="noeud-texte" x="760" y="1052">CONVERSION</text>
+          <text class="noeud-texte" x="760" y="1072" font-size="10.5" font-style="italic">emprunt à gauche</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="CALC">
+          <rect class="noeud-forme" x="350" y="1160" width="240" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="1190">MC = MC − MR</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="DEPOT">
+          <rect class="noeud-forme" x="350" y="1260" width="240" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="1290">1 pion au Quotient</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="RESULTAT">
+          <rect class="noeud-forme" x="370" y="1390" width="200" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="1420">RÉSULTAT</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="CTN">
+          <polygon class="noeud-diamant" points="470,1485 555,1530 470,1575 385,1530"></polygon>
+          <text class="noeud-texte" x="470" y="1530">CTN ?</text>
+        </g>
+
+        <g class="noeud-diagramme noeud-decimal" data-noeud="DECIMAL">
+          <rect class="noeud-forme" x="620" y="1495" width="280" height="70" rx="14"></rect>
+          <text class="noeud-texte" x="760" y="1522">Partie décimale</text>
+          <text class="noeud-texte" x="760" y="1542" font-size="10.5" font-style="italic">bientôt disponible</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="FIN">
+          <rect class="noeud-forme" x="390" y="1620" width="160" height="60" rx="14"></rect>
+          <text class="noeud-texte" x="470" y="1650">FIN</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
   <p class="apropos">Diviser au kpo-awalé, c'est soustraire le Diviseur du Dividende autant de fois que possible — fenêtre par fenêtre, en commençant par les villages les plus significatifs. Quand la fenêtre ne suffit plus, on l'élargit d'un village vers la droite&nbsp;: tout ce qui a été mis de côté plus haut continue de compter, et une conversion peut aller le chercher pour continuer à retirer. Le Quotient se construit un pion à la fois, toujours dans le même village, qui se décale vers la gauche à chaque nouvelle fenêtre.</p>
 </main>
 
@@ -456,7 +692,17 @@
     qtDigits: {},     // qtDigits[windowShift] = pions déposés au quotient pour cette fenêtre
     enAnimation: false,
     termine: false,
-    generation: 0
+    generation: 0,
+    dejaCalcule: false,  // EB : est-on déjà entré une fois dans la boucle principale ?
+    generateur: null,    // le générateur JS qui rejoue le logigramme, pas à pas
+    journal: [],         // historique des étapes affichées dans le panneau "journal"
+    noeudActif: null     // le nœud du logigramme actuellement en surbrillance
+  };
+
+  var LIBELLES_NOEUDS = {
+    MM: 'MM', MC_MR: 'MC ≥ MR', EB_SET: 'EB', MRG: 'MRG', CONVERSION: 'Conversion',
+    CALC: 'MC = MC − MR', DEPOT: '+1 au QT', AV: 'AV', AJUSTEMENT: 'Ajustement',
+    R_MR: 'R ≥ MR', EB_Q: 'EB ?', DEPL_ENTIER: 'Dépl. Entier', RESULTAT: 'Résultat'
   };
 
   function creerImg(chiffre) {
@@ -642,71 +888,129 @@
     });
   }
 
-  // Une étape de jeu = un clic sur le Diviseur : soit une conversion + un retrait,
-  // soit un élargissement de la fenêtre, soit la fin de l'opération.
-  function etapeDivision() {
-    if (etat.enAnimation || etat.phase !== 'division' || etat.termine) return;
+  function texteOuiNon(b) { return b ? 'Oui' : 'Non'; }
 
-    var R = valeurPrefixe();
-    var MRv = valeurMR();
+  function pas(noeud, texte, vars) {
+    return { noeud: noeud, texte: texte, vars: vars || {} };
+  }
 
-    if (R < MRv) {
-      var lp = basFenetre();
-      if (lp > 0) {
-        etat.enAnimation = true;
-        var villagePuissance = lp - 1; // le prochain village à intégrer, juste sous la fenêtre actuelle
-        afficherMessage('Ce n’est pas encore assez pour retirer le Diviseur : la fenêtre s’élargit d’un village vers la droite.');
-        flashClasse(0, villagePuissance + 1, 'emprunt-anime', 700);
+  // Le generateur rejoue exactement le logigramme, un noeud a la fois : chaque `yield`
+  // correspond a un losange ou un rectangle du schema. Un clic sur le Diviseur fait
+  // avancer ce generateur jusqu'au prochain "fin de tour" (un depot, ou la fin de tout).
+  function* genererDivision() {
+    while (true) {
+      var R = valeurPrefixe(), MRv = valeurMR();
+      var passe = (R >= MRv);
+      yield pas('MC_MR', 'MC ≥ MR ? ' + R.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe), { MC: R, MR: MRv });
+
+      if (passe) {
+        etat.dejaCalcule = true;
+        yield pas('EB_SET', 'Entree dans la boucle principale : EB = Oui.', {});
+      } else {
+        var lp = basFenetre();
+        var villageDispo = lp > 0;
+        yield pas('AV', 'Encore un village disponible a gauche du Dividende ? → ' + texteOuiNon(villageDispo), {});
+        if (!villageDispo) {
+          yield pas('RESULTAT', 'Plus aucun village disponible : l’operation s’arrete ici.', {});
+          etat.termine = true;
+          return;
+        }
+        var villagePuissance = lp - 1;
         etat.windowShift++;
-        setTimeout(function () { etat.enAnimation = false; rendreTout(); }, 500);
-        return;
+        yield pas('AJUSTEMENT', 'Ajustement : la fenetre s’elargit d’un village vers la droite.', { village: villagePuissance });
+
+        var R2 = valeurPrefixe();
+        var passe2 = (R2 >= MRv);
+        yield pas('R_MR', 'R ≥ MR (reserve comprise) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
+
+        if (!passe2) {
+          yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se decale quand meme, un 0 implicite a cette position.', {});
+          continue;
+        }
+
+        yield pas('EB_Q', 'Es-tu deja entre une fois dans la boucle principale ? → ' + texteOuiNon(etat.dejaCalcule), {});
+        if (etat.dejaCalcule) {
+          yield pas('DEPL_ENTIER', 'Deplacement Entier : le chiffre deja pose au Quotient glisse d’un cran vers la gauche.', {});
+        }
       }
-      terminerDivision();
+
+      // Boucle interne MRG / Conversion, commune aux deux chemins ci-dessus.
+      while (true) {
+        var pDef = trouverDeficient();
+        yield pas('MRG', 'Meme Rangement ? La fenetre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
+        if (pDef === -1) break;
+        var touches = convertirVers(pDef);
+        if (touches === null) break;
+        yield pas('CONVERSION', 'Conversion : un pion emprunte plus a gauche devient dix pions pour le village en difficulte.', { touches: touches });
+      }
+
+      var lp2 = basFenetre();
+      var positionsFenetre = [];
+      for (var i = 0; i < etat.m; i++) positionsFenetre.push(lp2 + i);
+      var avantVal = valeurPrefixe();
+      var mrVal = valeurMR();
+      for (var k = 0; k < etat.m; k++) etat.dividende[lp2 + k] -= etat.MR[k];
+      var apresVal = valeurPrefixe();
+      yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
+
+      etat.qtDigits[etat.windowShift] = (etat.qtDigits[etat.windowShift] || 0) + 1;
+      yield pas('DEPOT', '1 pion depose au Quotient, dans le village actif de la Rangee 3.', {});
+
+      yield { finDeTour: true };
+    }
+  }
+
+  var DUREE_PAS_MS = 1000;
+
+  function ajouterJournal(p) {
+    etat.journal.push(p);
+    if (etat.journal.length > 300) etat.journal.shift();
+  }
+
+  function declencherAnimationPlateau(p) {
+    if (p.noeud === 'AJUSTEMENT') {
+      flashClasse(0, p.vars.village + 1, 'emprunt-anime', 700);
+    } else if (p.noeud === 'CONVERSION') {
+      var uniques = p.vars.touches.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      animerVillages(0, uniques, 'emprunt-anime');
+    } else if (p.noeud === 'CALC') {
+      animerVillages(0, p.vars.positions, 'retrait-anime');
+    } else if (p.noeud === 'DEPOT') {
+      flashClasse(2, 1, 'depot-anime', 650);
+    }
+  }
+
+  function avancerGenerateur() {
+    var resultat = etat.generateur.next();
+    if (resultat.done) {
+      etat.enAnimation = false;
+      etat.noeudActif = null;
+      rendreTout();
       return;
     }
-
-    // R >= MR : il faut que la fenêtre permette le retrait, village par village (avec conversions si besoin).
-    var garde = 0;
-    var toutesConversions = [];
-    while (garde < 20) {
-      var pDef = trouverDeficient();
-      if (pDef === -1) break;
-      var touches = convertirVers(pDef);
-      if (touches === null) break; // ne devrait pas arriver puisque R >= MR a été vérifié
-      toutesConversions = toutesConversions.concat(touches);
-      garde++;
-    }
-
-    var lp2 = basFenetre();
-    var positionsFenetre = [];
-    for (var i = 0; i < etat.m; i++) positionsFenetre.push(lp2 + i);
-
-    etat.enAnimation = true;
-    var lancerCalcul = function () {
-      for (var k = 0; k < etat.m; k++) etat.dividende[lp2 + k] -= etat.MR[k];
-      etat.qtDigits[etat.windowShift] = (etat.qtDigits[etat.windowShift] || 0) + 1;
-      animerVillages(0, positionsFenetre, 'retrait-anime');
-      flashClasse(2, 1, 'depot-anime', 650);
-      afficherMessage('Retiré : le Diviseur quitte la fenêtre, un pion tombe au Quotient.');
-      setTimeout(function () { etat.enAnimation = false; rendreTout(); }, 650);
+    var p = resultat.value;
+    if (p.finDeTour) {
+      etat.enAnimation = false;
+      etat.noeudActif = null;
       rendreTout();
-    };
-
-    if (toutesConversions.length > 0) {
-      var uniques = toutesConversions.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
-      animerVillages(0, uniques, 'emprunt-anime');
-      afficherMessage('Conversion : un pion emprunté plus à gauche devient dix pions pour compléter la fenêtre — puis le retrait se fait.');
-      rendreTout();
-      setTimeout(lancerCalcul, uniques.length * 170 + 500);
-    } else {
-      lancerCalcul();
+      return;
     }
-  }
-
-  function terminerDivision() {
-    etat.termine = true;
+    etat.noeudActif = p.noeud;
+    ajouterJournal(p);
+    declencherAnimationPlateau(p);
     rendreTout();
+    setTimeout(avancerGenerateur, DUREE_PAS_MS);
   }
+
+  // Une etape de jeu = un clic sur le Diviseur : le generateur avance jusqu'au
+  // prochain depot (ou jusqu'a la fin), en devoilant une variable a la fois.
+  function etapeDivision() {
+    if (etat.enAnimation || etat.phase !== 'division' || etat.termine) return;
+    if (!etat.generateur) etat.generateur = genererDivision();
+    etat.enAnimation = true;
+    avancerGenerateur();
+  }
+
 
   function onPitClick(r, pos) {
     var idx = pos - 1;
@@ -871,6 +1175,39 @@
     } else {
       succesEl.classList.remove('visible');
     }
+
+    rendreJournal();
+    rendreLogigramme();
+  }
+
+  function rendreJournal() {
+    var conteneur = document.getElementById('journal-corps');
+    if (!conteneur) return;
+    if (etat.journal.length === 0) {
+      conteneur.innerHTML = '<p class="journal-vide" id="journal-vide">Compose le Dividende et le Diviseur, puis clique sur ' + String.fromCharCode(171) + '\u00a0Passer \u00e0 la division\u00a0' + String.fromCharCode(187) + ' \u2014 chaque d\u00e9cision du jeu s\u2019affichera ici, l\u2019une apr\u00e8s l\u2019autre.</p>';
+      return;
+    }
+    conteneur.innerHTML = '';
+    etat.journal.forEach(function (p) {
+      var ligne = document.createElement('div');
+      ligne.className = 'journal-ligne';
+      var badge = document.createElement('span');
+      badge.className = 'journal-badge';
+      badge.textContent = LIBELLES_NOEUDS[p.noeud] || p.noeud;
+      var texte = document.createElement('span');
+      texte.className = 'journal-texte';
+      texte.textContent = p.texte;
+      ligne.appendChild(badge);
+      ligne.appendChild(texte);
+      conteneur.appendChild(ligne);
+    });
+    conteneur.scrollTop = conteneur.scrollHeight;
+  }
+
+  function rendreLogigramme() {
+    document.querySelectorAll('.noeud-diagramme').forEach(function (el) {
+      el.classList.toggle('actif', etat.noeudActif !== null && el.dataset.noeud === etat.noeudActif);
+    });
   }
 
   function valeurQuotient() {
@@ -897,10 +1234,18 @@
     etat.qtDigits = {};
     etat.phase = 'division';
     etat.termine = false;
+    etat.dejaCalcule = false;
+    etat.generateur = null;
+    etat.journal = [];
+    etat.noeudActif = 'MM';
 
-    if (nD < m) {
-      // Le diviseur a plus de villages significatifs que le dividende : quotient nul d'emblée.
+    var mm = (nD >= m);
+    ajouterJournal(pas('MM', 'MM : le Dividende a-t-il au moins autant de villages que le Diviseur (' + m + ') \u2192 ' + texteOuiNon(mm), {}));
+
+    if (!mm) {
+      ajouterJournal(pas('RESULTAT', 'Le Diviseur est plus large que le Dividende : Quotient nul d\u2019embl\u00e9e.', {}));
       etat.termine = true;
+      etat.noeudActif = null;
     }
     rendreTout();
   });
@@ -917,6 +1262,10 @@
     etat.qtDigits = {};
     etat.enAnimation = false;
     etat.termine = false;
+    etat.dejaCalcule = false;
+    etat.generateur = null;
+    etat.journal = [];
+    etat.noeudActif = null;
     afficherMessage('');
     rendreTout();
   });
