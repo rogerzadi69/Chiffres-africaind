@@ -319,6 +319,11 @@
   }
   .succes-final.visible { opacity: 1; max-height: 320px; margin: 18px auto 20px; }
   .succes-final strong { display: block; font-size: 19px; margin-bottom: 4px; }
+  .operation-rappel {
+    display: block; font-family: Georgia, serif; font-size: 17px; color: var(--encre);
+    background: var(--blanc); border: 1.5px solid var(--succes); border-radius: 14px;
+    padding: 6px 16px; margin: 0 auto 12px; width: fit-content;
+  }
 
   /* ============ JOURNAL DES VARIABLES ============ */
   .journal {
@@ -369,6 +374,31 @@
   .noeud-decimal .noeud-forme, .noeud-decimal .noeud-diamant { fill: var(--papier-fonce); stroke: var(--encre-douce); stroke-dasharray: 5 4; }
   .noeud-decimal .noeud-texte { fill: var(--encre-douce); font-style: italic; }
   .arc-decimal { stroke-dasharray: 4 4; }
+  .arc-logigramme.actif {
+    stroke: var(--terre); stroke-opacity: 1; stroke-width: 4;
+    stroke-dasharray: 7 5; animation: file-fourmis 0.6s linear infinite;
+  }
+  @keyframes file-fourmis { to { stroke-dashoffset: -24; } }
+
+  /* ============ BULLE DE VARIABLE ============ */
+  .logigramme-enveloppe { position: relative; }
+  .bulle-logigramme {
+    position: absolute; z-index: 20; max-width: 260px;
+    background: var(--graine-1); border: 2px solid var(--terre); border-radius: 14px;
+    padding: 8px 14px; font-family: Georgia, serif; font-size: 12.5px; line-height: 1.4;
+    color: #3a2415; box-shadow: 0 8px 20px -6px rgba(0,0,0,0.35);
+    transition: top 0.4s ease, left 0.4s ease, opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .bulle-logigramme::after {
+    content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
+    border-width: 9px 8px 0 8px; border-style: solid; border-color: var(--terre) transparent transparent transparent;
+  }
+  .bulle-logigramme::before {
+    content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); z-index: 1;
+    border-width: 7px 6px 0 6px; border-style: solid; border-color: var(--graine-1) transparent transparent transparent;
+  }
+  .bulle-logigramme[hidden] { display: none; }
 
   /* ============ NOTE ============ */
   .apropos {
@@ -495,7 +525,12 @@
   <section class="logigramme-section">
     <h2>Le logigramme de la division kpo-awalé</h2>
     <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. À chaque clic, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
+    <div class="controles-phase">
+      <button class="btn-avancer" id="btn-auto-logigramme">▶ Dérouler le logigramme tout seul</button>
+      <button class="btn-recommencer" id="btn-stop-logigramme" hidden>■ Arrêter le déroulement</button>
+    </div>
     <div class="logigramme-enveloppe">
+      <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
       <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1400" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -506,77 +541,75 @@
         <!-- ===== Arcs (dessinés avant les nœuds, pour passer dessous) ===== -->
         <g>
           <!-- DEBUT -> MM -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97" data-vers="MM"></path>
           <!-- MM -> MC_MR (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT"></path>
           <text class="arc-etiquette" x="330" y="132">Non</text>
-          <text class="arc-etiquette" x="20" y="128" font-size="9">Quotient = 0 (résultat immédiat)</text>
 
           <!-- MC_MR -> EB_SET (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,290 L470,320"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,290 L470,320" data-vers="EB_SET"></path>
           <text class="arc-etiquette" x="484" y="310">Oui</text>
           <!-- MC_MR -> AV (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,250 L140,250 L140,307"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,250 L140,250 L140,307" data-vers="AV"></path>
           <text class="arc-etiquette" x="230" y="243">Non</text>
 
           <!-- AV -> AJUSTEMENT (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,390 L140,415"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,390 L140,415" data-vers="AJUSTEMENT"></path>
           <text class="arc-etiquette" x="154" y="407">Oui</text>
           <!-- AV -> RESULTAT (Non), longe une marge un peu plus interne -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150"></path>
-          <text class="arc-etiquette" x="24" y="760" transform="rotate(-90 24 760)">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150" data-vers="RESULTAT"></path>
+          <text class="arc-etiquette" x="42" y="342">Non</text>
 
           <!-- AJUSTEMENT -> R_MR -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,482 L140,507"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,482 L140,507" data-vers="R_MR"></path>
 
           <!-- R_MR -> EB_Q (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,590 L140,607"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,590 L140,607" data-vers="EB_Q"></path>
           <text class="arc-etiquette" x="154" y="602">Oui</text>
           <!-- R_MR -> DEPL_ENTIER_B (Non) : petit rectangle serré contre le losange, bien avant la colonne centrale -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,550 L227,550"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,550 L227,550" data-vers="DEPL_ENTIER"></path>
           <text class="arc-etiquette" x="212" y="542">Non</text>
           <!-- DEPL_ENTIER_B revient au losange AV, tout entier avant la ligne centrale EB->MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M315,523 L315,350 L207,350"></path>
-          <text class="arc-etiquette" x="321" y="440" transform="rotate(-90 321 440)">retour à AV</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M315,523 L315,350 L207,350" data-vers="AV"></path>
 
           <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,690 L140,720"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,690 L140,720" data-vers="DEPL_ENTIER"></path>
           <text class="arc-etiquette" x="154" y="712">Oui</text>
           <!-- EB_Q -> MRG directement (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,650 L360,650 L360,853 L402,853"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,650 L360,650 L360,853 L402,853" data-vers="MRG"></path>
           <text class="arc-etiquette" x="212" y="643">Non</text>
           <!-- DEPL_ENTIER_A -> MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,777 L140,847 L402,847"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,777 L140,847 L402,847" data-vers="MRG"></path>
 
           <!-- EB_SET -> MRG (colonne centrale) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,377 L470,807"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,377 L470,807" data-vers="MRG"></path>
 
           <!-- MRG -> CONVERSION (Non), boucle par au-dessus -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,850 L667,850"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,850 L667,850" data-vers="CONVERSION"></path>
           <text class="arc-etiquette" x="580" y="842">Non</text>
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,818 L760,780 L470,780 L470,807"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,818 L760,780 L470,780 L470,807" data-vers="MRG"></path>
 
           <!-- MRG -> CALC (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,890 L470,920"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,890 L470,920" data-vers="CALC"></path>
           <text class="arc-etiquette" x="484" y="912">Oui</text>
 
           <!-- CALC -> DEPOT -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,977 L470,1010"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,977 L470,1010" data-vers="DEPOT"></path>
 
           <!-- DEPOT boucle en arrière vers MC_MR, tout à droite -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250" data-vers="MC_MR"></path>
 
           <!-- RESULTAT -> CTN -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1177 L470,1197"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1177 L470,1197" data-vers="CTN"></path>
 
           <!-- CTN -> FIN (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1280 L470,1300"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1280 L470,1300" data-vers="FIN"></path>
           <text class="arc-etiquette" x="484" y="1295">Non</text>
           <!-- CTN -> partie décimale (Oui), pas encore jouable -->
-          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M535,1240 L607,1240"></path>
+          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M535,1240 L607,1240" data-vers="DECIMAL"></path>
           <text class="arc-etiquette" x="555" y="1232">Oui</text>
         </g>
 
@@ -710,7 +743,10 @@
     generateur: null,    // le générateur JS qui rejoue le logigramme, pas à pas
     journal: [],         // historique des étapes affichées dans le panneau "journal"
     noeudActif: null,    // le nœud du logigramme actuellement en surbrillance
-    dernierNoeudDefile: null  // évite de refaire défiler la page vers un nœud déjà visé
+    dernierNoeudDefile: null,  // évite de refaire défiler la page vers un nœud déjà visé
+    dividendeDepart: 0,   // valeur du Dividende au tout début, pour rappeler l'opération au résultat
+    diviseurDepart: 0,
+    modeAuto: false       // vrai pendant un déroulement automatique du logigramme
   };
 
   var LIBELLES_NOEUDS = {
@@ -926,7 +962,7 @@
         while (true) {
           var lp = basFenetre();
           var villageDispo = lp > 0;
-          yield pas('AV', 'Encore un village disponible à gauche du Dividende ? → ' + texteOuiNon(villageDispo), {});
+          yield pas('AV', 'Autre village dans le Dividende ? → ' + texteOuiNon(villageDispo), {});
           if (!villageDispo) {
             yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici.', {});
             etat.termine = true;
@@ -989,7 +1025,21 @@
   };
   var DUREE_PAS_DEFAUT = 1300;
 
-  function dureePas(noeud) { return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT; }
+  // En déroulement automatique (bouton dédié, sans plateau à cliquer), on prend
+  // encore plus le temps de montrer chaque losange, rectangle et flèche.
+  var DUREES_PAS_AUTO = {
+    AJUSTEMENT: 3400,
+    CONVERSION: 3200,
+    CALC: 2600,
+    DEPOT: 2400
+  };
+  var DUREE_PAS_DEFAUT_AUTO = 2200;
+  var PAUSE_ENTRE_TOURS_AUTO = 900;
+
+  function dureePas(noeud) {
+    if (etat.modeAuto) return DUREES_PAS_AUTO[noeud] || DUREE_PAS_DEFAUT_AUTO;
+    return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT;
+  }
 
   function ajouterJournal(p) {
     etat.journal.push(p);
@@ -1014,11 +1064,18 @@
     }
   }
 
+  function arreterModeAuto() {
+    etat.modeAuto = false;
+    document.getElementById('btn-auto-logigramme').hidden = false;
+    document.getElementById('btn-stop-logigramme').hidden = true;
+  }
+
   function avancerGenerateur() {
     var resultat = etat.generateur.next();
     if (resultat.done) {
       etat.enAnimation = false;
       etat.noeudActif = null;
+      if (etat.modeAuto) arreterModeAuto();
       rendreTout();
       return;
     }
@@ -1027,6 +1084,10 @@
       etat.enAnimation = false;
       etat.noeudActif = null;
       rendreTout();
+      if (etat.modeAuto) {
+        etat.enAnimation = true;
+        setTimeout(avancerGenerateur, PAUSE_ENTRE_TOURS_AUTO);
+      }
       return;
     }
     etat.noeudActif = p.noeud;
@@ -1044,6 +1105,37 @@
     etat.enAnimation = true;
     avancerGenerateur();
   }
+
+  // Déroulement automatique et indépendant du logigramme : plus besoin de cliquer
+  // sur le Diviseur à chaque tour, tout s'enchaîne tout seul jusqu'au résultat.
+  function lancerLogigrammeAuto() {
+    if (etat.enAnimation) return;
+
+    if (etat.phase === 'composition') {
+      var nD0 = largeurSignificative(etat.dividende);
+      var m0 = largeurSignificative(etat.diviseur);
+      if (m0 === 0) { afficherMessage('Compose d’abord un Diviseur différent de zéro.'); return; }
+      if (nD0 === 0) { afficherMessage('Compose d’abord un Dividende différent de zéro.'); return; }
+      document.getElementById('btn-vers-division').click();
+    }
+
+    if (etat.termine || etat.phase !== 'division') return;
+
+    etat.modeAuto = true;
+    document.getElementById('btn-auto-logigramme').hidden = true;
+    document.getElementById('btn-stop-logigramme').hidden = false;
+    var enveloppeAuto = document.querySelector('.logigramme-enveloppe');
+    if (typeof enveloppeAuto.scrollIntoView === 'function') {
+      enveloppeAuto.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (!etat.generateur) etat.generateur = genererDivision();
+    etat.enAnimation = true;
+    setTimeout(avancerGenerateur, PAUSE_ENTRE_TOURS_AUTO);
+  }
+
+  document.getElementById('btn-auto-logigramme').addEventListener('click', lancerLogigrammeAuto);
+  document.getElementById('btn-stop-logigramme').addEventListener('click', arreterModeAuto);
 
 
   function onPitClick(r, pos) {
@@ -1204,7 +1296,9 @@
     if (etat.termine) {
       var texteQT = valeurQuotient().toLocaleString('fr-FR');
       var texteReste = valeurTotale(etat.dividende).toLocaleString('fr-FR');
-      succesEl.innerHTML = '<strong>Quotient : ' + texteQT + '</strong>Reste : ' + texteReste + '. Bravo, la division est exacte, fenêtre après fenêtre.';
+      var texteDepart = etat.dividendeDepart.toLocaleString('fr-FR') + ' ÷ ' + etat.diviseurDepart.toLocaleString('fr-FR');
+      succesEl.innerHTML = '<span class="operation-rappel">' + texteDepart + ' = ' + texteQT + ', reste ' + texteReste + '</span>' +
+        '<strong>Quotient : ' + texteQT + '</strong>Reste : ' + texteReste + '. Bravo, la division est exacte, fenêtre après fenêtre.';
       succesEl.classList.add('visible');
     } else {
       succesEl.classList.remove('visible');
@@ -1245,6 +1339,10 @@
       el.classList.toggle('actif', actif);
       if (actif && !premierActif) premierActif = el;
     });
+    // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée.
+    document.querySelectorAll('.arc-logigramme').forEach(function (el) {
+      el.classList.toggle('actif', etat.noeudActif !== null && el.dataset.vers === etat.noeudActif);
+    });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
     // toujours exactement où en est le raisonnement, même sur un long logigramme.
     if (premierActif && etat.noeudActif !== etat.dernierNoeudDefile) {
@@ -1253,6 +1351,32 @@
         premierActif.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
       }
     }
+    positionnerBulle(premierActif);
+  }
+
+  // La bulle flotte juste au-dessus du nœud actif et reprend le texte de la
+  // dernière ligne du journal : les variables suivent le déplacement de la logique.
+  function positionnerBulle(elementActif) {
+    var bulle = document.getElementById('bulle-logigramme');
+    var enveloppe = document.querySelector('.logigramme-enveloppe');
+    if (!elementActif || !etat.noeudActif || etat.journal.length === 0) {
+      bulle.hidden = true;
+      return;
+    }
+    var derniere = etat.journal[etat.journal.length - 1];
+    bulle.textContent = derniere.texte;
+    bulle.hidden = false;
+
+    if (typeof elementActif.getBoundingClientRect !== 'function') return;
+    var rectNoeud = elementActif.getBoundingClientRect();
+    var rectEnv = enveloppe.getBoundingClientRect();
+    if (rectNoeud.width === 0 && rectNoeud.height === 0) return;
+
+    var haut = rectNoeud.top - rectEnv.top + enveloppe.scrollTop - bulle.offsetHeight - 14;
+    if (haut < enveloppe.scrollTop) haut = rectNoeud.bottom - rectEnv.top + enveloppe.scrollTop + 14;
+    var gauche = rectNoeud.left - rectEnv.left + enveloppe.scrollLeft + rectNoeud.width / 2 - bulle.offsetWidth / 2;
+    bulle.style.top = haut + 'px';
+    bulle.style.left = gauche + 'px';
   }
 
   function valeurQuotient() {
@@ -1283,6 +1407,8 @@
     etat.generateur = null;
     etat.journal = [];
     etat.noeudActif = 'MM';
+    etat.dividendeDepart = valeurTotale(etat.dividende);
+    etat.diviseurDepart = valeurTotale(etat.diviseur);
 
     var mm = (nD >= m);
     ajouterJournal(pas('MM', 'MM : le Dividende a-t-il au moins autant de villages que le Diviseur (' + m + ') \u2192 ' + texteOuiNon(mm), {}));
@@ -1312,6 +1438,9 @@
     etat.journal = [];
     etat.noeudActif = null;
     etat.dernierNoeudDefile = null;
+    etat.dividendeDepart = 0;
+    etat.diviseurDepart = 0;
+    etat.modeAuto = false;
     afficherMessage('');
     rendreTout();
   });
