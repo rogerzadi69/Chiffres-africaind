@@ -368,7 +368,6 @@
     color: var(--terre); background: var(--papier-fonce); border: 1.5px dashed var(--terre);
     border-radius: 12px; padding: 7px 14px; max-width: 640px; margin: 0 auto 14px;
   }
-  .journal-corps-demo { max-width: 720px; margin: 0 auto 14px; background: var(--papier-fonce); border: 1.5px solid var(--encre); border-radius: 14px; padding: 12px 16px; }
   .logigramme-enveloppe { overflow-x: auto; background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 18px; padding: 14px; }
   .logigramme-svg { display: block; margin: 0 auto; min-width: 760px; }
   .noeud-forme, .noeud-diamant {
@@ -536,21 +535,20 @@
   <section class="journal">
     <h2>Le raisonnement, variable après variable</h2>
     <div class="journal-corps" id="journal-corps">
-      <p class="journal-vide" id="journal-vide">Compose le Dividende et le Diviseur, puis clique sur « Passer à la division » — chaque décision du jeu s'affichera ici, l'une après l'autre.</p>
+      <p class="journal-vide" id="journal-vide">Ce panneau reste vide pendant que tu joues sur le plateau — le jeu et le logigramme sont indépendants. Clique sur « Démarrer le logigramme », plus bas, pour dérouler le raisonnement de ta division, pas à pas.</p>
     </div>
   </section>
 
   <section class="logigramme-section">
     <h2>Le logigramme de la division kpo-awalé</h2>
-    <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. Pendant ta partie, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
-    <p class="logigramme-intro">Tu peux aussi lancer une <strong>démonstration indépendante</strong> (111 ÷ 12) pour étudier la logique sans toucher à ta partie en cours&nbsp;: elle avance d'un seul cran à chaque clic, à ton rythme.</p>
+    <p class="logigramme-intro">Le même raisonnement, vu comme un schéma — mais indépendant du jeu&nbsp;: jouer sur le plateau n'active plus ce schéma.</p>
+    <p class="logigramme-intro">Clique sur « Démarrer le logigramme » pour dérouler pas à pas le raisonnement de <strong>ta</strong> division (celle que tu as composée), à ton propre rythme&nbsp;: un seul nœud s'allume à chaque clic sur « Suivant ».</p>
     <div class="controles-phase">
-      <button class="btn-avancer" id="btn-demo-demarrer">▶ Démonstration pas à pas (111 ÷ 12)</button>
+      <button class="btn-avancer" id="btn-demo-demarrer">▶ Démarrer le logigramme</button>
       <button class="btn-avancer" id="btn-demo-suivant" hidden>Suivant →</button>
-      <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter la démonstration</button>
+      <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter le logigramme</button>
     </div>
-    <p class="demo-bandeau" id="demo-bandeau" hidden>Démonstration indépendante en cours — ta partie n'est pas modifiée.</p>
-    <div class="journal-corps journal-corps-demo" id="journal-demo-corps" hidden></div>
+    <p class="demo-bandeau" id="demo-bandeau" hidden>Déroulement du logigramme en cours — indépendant du jeu, ta partie n'est pas modifiée.</p>
     <div class="logigramme-enveloppe">
       <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
       <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1400" xmlns="http://www.w3.org/2000/svg">
@@ -1062,11 +1060,6 @@
     return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT;
   }
 
-  function ajouterJournal(p) {
-    etat.journal.push(p);
-    if (etat.journal.length > 300) etat.journal.shift();
-  }
-
   function declencherAnimationPlateau(p) {
     if (p.noeud === 'AJUSTEMENT') {
       flashClasse(0, p.vars.village + 1, 'emprunt-anime', 1400);
@@ -1085,23 +1078,22 @@
     }
   }
 
+  // Ce déroulement ne touche jamais le journal ni le logigramme SVG : jouer sur le plateau
+  // reste une activité à part, purement gestuelle (pions qui bougent), du raisonnement affiché
+  // en détail — celui-ci ne s'active plus que via son propre bouton (voir plus bas).
   function avancerGenerateur() {
     var resultat = etat.generateur.next();
     if (resultat.done) {
       etat.enAnimation = false;
-      etat.noeudActif = null;
       rendreTout();
       return;
     }
     var p = resultat.value;
     if (p.finDeTour) {
       etat.enAnimation = false;
-      etat.noeudActif = null;
       rendreTout();
       return;
     }
-    etat.noeudActif = p.noeud;
-    ajouterJournal(p);
     declencherAnimationPlateau(p);
     rendreTout();
     setTimeout(avancerGenerateur, dureePas(p.noeud));
@@ -1116,25 +1108,36 @@
     avancerGenerateur();
   }
 
-  // ============ DÉMONSTRATION INDÉPENDANTE DU LOGIGRAMME ============
-  // Entièrement détachée de la partie en cours : son propre état (etatDemo), son propre
-  // générateur, sur un exemple fixe (111 ÷ 12) — elle ne lit ni ne modifie jamais `etat`,
-  // le plateau à pions, le Dividende ou le Diviseur composés par le joueur. Elle partage
-  // seulement le schéma SVG et la bulle (un seul exemplaire sur la page), et se met en
-  // pause dès que la partie réelle est restaurée (voir quitterDemo).
+  // ============ LOGIGRAMME INDÉPENDANT DU JEU ============
+  // Jouer sur le plateau (composer, puis diviser) n'active plus jamais ce schéma : c'est
+  // la correction demandée, le jeu et le logigramme sont désormais deux activités séparées.
+  // Ce bloc rejoue le raisonnement sur son propre état (etatDemo), une copie des nombres du
+  // joueur au moment où il clique sur « Démarrer le logigramme » — jamais `etat` lui-même,
+  // jamais le plateau à pions. Il partage seulement le schéma SVG et la bulle (un seul
+  // exemplaire sur la page) et n'avance qu'au clic (voir avancerDemo).
   var etatDemo = null;
 
-  function creerEtatDemo() {
+  // Reconstruit un tableau de chiffres (indice 0 = unités) à partir d'un nombre entier,
+  // pour rejouer depuis les nombres de départ même une fois la division déjà entamée sur
+  // le plateau réel (etat.dividendeDepart / diviseurDepart n'y sont conservés que comme nombres).
+  function chiffresDepuisNombre(n) {
+    var arr = new Array(MAX_VILLAGES).fill(0);
+    for (var i = 0; i < MAX_VILLAGES && n > 0; i++) {
+      arr[i] = n % 10;
+      n = Math.floor(n / 10);
+    }
+    return arr;
+  }
+
+  function creerEtatDemo(dividendeArr, diviseurArr) {
     var s = {
-      dividende: new Array(MAX_VILLAGES).fill(0),
-      diviseur: new Array(MAX_VILLAGES).fill(0),
+      dividende: dividendeArr.slice(),
+      diviseur: diviseurArr.slice(),
       MR: [], m: 0, nD: 0, windowShift: 0, qtDigits: {},
       dejaCalcule: false, termine: false, generateur: null,
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0
     };
-    s.dividende[0] = 1; s.dividende[1] = 1; s.dividende[2] = 1; // 111
-    s.diviseur[0] = 2; s.diviseur[1] = 1; // 12
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
     s.MR = s.diviseur.slice(0, s.m);
@@ -1143,47 +1146,50 @@
     return s;
   }
 
-  function rendreJournalDemo() {
-    var conteneur = document.getElementById('journal-demo-corps');
-    if (!conteneur || !etatDemo) return;
-    conteneur.innerHTML = '';
-    etatDemo.journal.forEach(function (p) {
-      var ligne = document.createElement('div');
-      ligne.className = 'journal-ligne';
-      var badge = document.createElement('span');
-      badge.className = 'journal-badge';
-      badge.textContent = LIBELLES_NOEUDS[p.noeud] || p.noeud;
-      var texte = document.createElement('span');
-      texte.className = 'journal-texte';
-      texte.textContent = p.texte;
-      ligne.appendChild(badge);
-      ligne.appendChild(texte);
-      conteneur.appendChild(ligne);
-    });
-    conteneur.scrollTop = conteneur.scrollHeight;
-  }
-
   function rendreDemo() {
-    rendreJournalDemo();
+    rendreJournal(etatDemo);
     rendreLogigramme(etatDemo);
   }
 
   function demarrerDemo() {
     if (etat.enAnimation || etat.demoActive) return;
+
+    var dividendeArr, diviseurArr;
+    if (etat.phase === 'composition') {
+      var nD0 = largeurSignificative(etat.dividende);
+      var m0 = largeurSignificative(etat.diviseur);
+      if (m0 === 0) { afficherMessage('Compose d’abord un Diviseur différent de zéro.'); return; }
+      if (nD0 === 0) { afficherMessage('Compose d’abord un Dividende différent de zéro.'); return; }
+      dividendeArr = etat.dividende.slice();
+      diviseurArr = etat.diviseur.slice();
+    } else {
+      // La division est déjà en cours (ou terminée) sur le plateau réel : on rejoue depuis
+      // les nombres de départ, pour dérouler le raisonnement complet, pas seulement la fin.
+      dividendeArr = chiffresDepuisNombre(etat.dividendeDepart);
+      diviseurArr = chiffresDepuisNombre(etat.diviseurDepart);
+    }
+
     etat.demoActive = true;
-    rendreTout(); // fige visuellement le plateau réel (plus aucun village cliquable) avant de basculer le schéma sur la démo
-    etatDemo = creerEtatDemo();
-    etatDemo.generateur = genererDivision(etatDemo);
+    rendreTout(); // fige visuellement le plateau réel (plus aucun village cliquable)
+    etatDemo = creerEtatDemo(dividendeArr, diviseurArr);
 
     var mm = etatDemo.nD >= etatDemo.m;
-    etatDemo.journal.push(pas('MM', 'MM : le Dividende a-t-il au moins autant de villages que le Diviseur (' + etatDemo.m + ') → ' + texteOuiNon(mm), {}));
-    etatDemo.noeudActif = 'MM';
+    etatDemo.journal.push(pas('MM', 'MM : la rangée du haut a-t-elle au moins autant de villages que la rangée du milieu (' + etatDemo.m + ') ? → ' + texteOuiNon(mm), {}));
 
     document.getElementById('btn-demo-demarrer').hidden = true;
-    document.getElementById('btn-demo-suivant').hidden = false;
     document.getElementById('btn-demo-quitter').hidden = false;
     document.getElementById('demo-bandeau').hidden = false;
-    document.getElementById('journal-demo-corps').hidden = false;
+
+    if (mm) {
+      etatDemo.generateur = genererDivision(etatDemo);
+      etatDemo.noeudActif = 'MM';
+      document.getElementById('btn-demo-suivant').hidden = false;
+    } else {
+      etatDemo.journal.push(pas('RESULTAT', 'La rangée du milieu est plus large que la rangée du haut : Quotient nul d’emblée.', {}));
+      etatDemo.noeudActif = 'RESULTAT';
+      document.getElementById('btn-demo-suivant').hidden = true;
+    }
+
     var enveloppeDemo = document.querySelector('.logigramme-enveloppe');
     if (typeof enveloppeDemo.scrollIntoView === 'function') {
       enveloppeDemo.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1195,7 +1201,7 @@
   // (`finDeTour`), qui ne correspondent à aucune case visible du schéma, sont sautés
   // automatiquement pour qu'aucun clic ne « tombe dans le vide ».
   function avancerDemo() {
-    if (!etatDemo || etatDemo.noeudActif === 'RESULTAT') return;
+    if (!etatDemo || !etatDemo.generateur || etatDemo.noeudActif === 'RESULTAT') return;
     var resultat;
     do {
       resultat = etatDemo.generateur.next();
@@ -1223,9 +1229,7 @@
     document.getElementById('btn-demo-suivant').hidden = true;
     document.getElementById('btn-demo-quitter').hidden = true;
     document.getElementById('demo-bandeau').hidden = true;
-    document.getElementById('journal-demo-corps').hidden = true;
-    etat.dernierNoeudDefile = null;
-    rendreTout(); // restaure le schéma et la bulle sur l'état réel de la partie
+    rendreTout(); // restaure le plateau réel — le journal et le schéma restent vides, comme pendant tout le jeu
   }
 
   document.getElementById('btn-demo-demarrer').addEventListener('click', demarrerDemo);
@@ -1401,19 +1405,21 @@
       succesEl.classList.remove('visible');
     }
 
-    rendreJournal();
+    rendreJournal(etat);
     rendreLogigramme(etat);
   }
 
-  function rendreJournal() {
+  // Ce m\u00eame panneau sert aussi bien au jeu r\u00e9el (toujours vide, d\u00e9sormais, puisque jouer
+  // ne remplit plus etat.journal) qu'au logigramme ind\u00e9pendant (rempli via etatDemo).
+  function rendreJournal(s) {
     var conteneur = document.getElementById('journal-corps');
     if (!conteneur) return;
-    if (etat.journal.length === 0) {
-      conteneur.innerHTML = '<p class="journal-vide" id="journal-vide">Compose le Dividende et le Diviseur, puis clique sur ' + String.fromCharCode(171) + '\u00a0Passer \u00e0 la division\u00a0' + String.fromCharCode(187) + ' \u2014 chaque d\u00e9cision du jeu s\u2019affichera ici, l\u2019une apr\u00e8s l\u2019autre.</p>';
+    if (s.journal.length === 0) {
+      conteneur.innerHTML = '<p class="journal-vide" id="journal-vide">Ce panneau reste vide pendant que tu joues sur le plateau ' + String.fromCharCode(8212) + ' le jeu et le logigramme sont ind\u00e9pendants. Clique sur ' + String.fromCharCode(171) + '\u00a0D\u00e9marrer le logigramme\u00a0' + String.fromCharCode(187) + ', plus bas, pour d\u00e9rouler le raisonnement de ta division, pas \u00e0 pas.</p>';
       return;
     }
     conteneur.innerHTML = '';
-    etat.journal.forEach(function (p) {
+    s.journal.forEach(function (p) {
       var ligne = document.createElement('div');
       ligne.className = 'journal-ligne';
       var badge = document.createElement('span');
@@ -1507,17 +1513,14 @@
     etat.dejaCalcule = false;
     etat.generateur = null;
     etat.journal = [];
-    etat.noeudActif = 'MM';
     etat.dividendeDepart = valeurTotale(etat.dividende);
     etat.diviseurDepart = valeurTotale(etat.diviseur);
 
+    // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
+    // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
     var mm = (nD >= m);
-    ajouterJournal(pas('MM', 'MM : le Dividende a-t-il au moins autant de villages que le Diviseur (' + m + ') \u2192 ' + texteOuiNon(mm), {}));
-
     if (!mm) {
-      ajouterJournal(pas('RESULTAT', 'Le Diviseur est plus large que le Dividende : Quotient nul d\u2019embl\u00e9e.', {}));
       etat.termine = true;
-      etat.noeudActif = null;
     }
     rendreTout();
   });
