@@ -496,7 +496,7 @@
     <h2>Le logigramme de la division kpo-awalé</h2>
     <p class="logigramme-intro">Le même raisonnement que ci-dessus, mais vu comme un schéma. À chaque clic, la case qui s'allume ici est exactement celle que le journal vient de décrire.</p>
     <div class="logigramme-enveloppe">
-      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1720" xmlns="http://www.w3.org/2000/svg">
+      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1400" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--encre-pale)"></path>
@@ -506,173 +506,173 @@
         <!-- ===== Arcs (dessinés avant les nœuds, pour passer dessous) ===== -->
         <g>
           <!-- DEBUT -> MM -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,80 L470,115"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97"></path>
           <!-- MM -> MC_MR (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,205 L470,240"></path>
-          <text class="arc-etiquette" x="486" y="225">Oui</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207"></path>
+          <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M385,160 L15,160 L15,1420 L370,1420"></path>
-          <text class="arc-etiquette" x="342" y="150">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150"></path>
+          <text class="arc-etiquette" x="330" y="132">Non</text>
+          <text class="arc-etiquette" x="20" y="128" font-size="9">Quotient = 0 (résultat immédiat)</text>
 
           <!-- MC_MR -> EB_SET (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,340 L470,390"></path>
-          <text class="arc-etiquette" x="486" y="370">Oui</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,290 L470,320"></path>
+          <text class="arc-etiquette" x="484" y="310">Oui</text>
           <!-- MC_MR -> AV (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M375,290 L150,290 L150,370"></path>
-          <text class="arc-etiquette" x="230" y="280">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,250 L140,250 L140,307"></path>
+          <text class="arc-etiquette" x="230" y="243">Non</text>
 
           <!-- AV -> AJUSTEMENT (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,470 L150,525"></path>
-          <text class="arc-etiquette" x="166" y="500">Oui</text>
-          <!-- AV -> RESULTAT (Non), longe la marge gauche -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M65,420 L30,420 L30,1420 L370,1420"></path>
-          <text class="arc-etiquette" x="36" y="900" transform="rotate(-90 36 900)">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,390 L140,415"></path>
+          <text class="arc-etiquette" x="154" y="407">Oui</text>
+          <!-- AV -> RESULTAT (Non), longe une marge un peu plus interne -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150"></path>
+          <text class="arc-etiquette" x="24" y="760" transform="rotate(-90 24 760)">Non</text>
 
           <!-- AJUSTEMENT -> R_MR -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,595 L150,630"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,482 L140,507"></path>
 
           <!-- R_MR -> EB_Q (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,730 L150,770"></path>
-          <text class="arc-etiquette" x="166" y="752">Oui</text>
-          <!-- R_MR -> DEPL_ENTIER_B (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,680 L405,680"></path>
-          <text class="arc-etiquette" x="300" y="670">Non</text>
-          <!-- DEPL_ENTIER_B revient au losange AV (pas à MC≥MR) : la fenêtre continue de s'élargir -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M630,680 L680,680 L680,420 L235,420"></path>
-          <text class="arc-etiquette" x="686" y="550" transform="rotate(-90 686 550)">retour à AV</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,590 L140,607"></path>
+          <text class="arc-etiquette" x="154" y="602">Oui</text>
+          <!-- R_MR -> DEPL_ENTIER_B (Non) : petit rectangle serré contre le losange, bien avant la colonne centrale -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,550 L227,550"></path>
+          <text class="arc-etiquette" x="212" y="542">Non</text>
+          <!-- DEPL_ENTIER_B revient au losange AV, tout entier avant la ligne centrale EB->MRG -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M315,523 L315,350 L207,350"></path>
+          <text class="arc-etiquette" x="321" y="440" transform="rotate(-90 321 440)">retour à AV</text>
 
           <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,870 L150,920"></path>
-          <text class="arc-etiquette" x="166" y="898">Oui</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,690 L140,720"></path>
+          <text class="arc-etiquette" x="154" y="712">Oui</text>
           <!-- EB_Q -> MRG directement (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M245,830 L400,830 L400,1060 L375,1060"></path>
-          <text class="arc-etiquette" x="300" y="820">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,650 L360,650 L360,853 L402,853"></path>
+          <text class="arc-etiquette" x="212" y="643">Non</text>
           <!-- DEPL_ENTIER_A -> MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M150,980 L150,1060 L375,1060"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,777 L140,847 L402,847"></path>
 
-          <!-- EB_SET -> MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,450 L470,1010"></path>
+          <!-- EB_SET -> MRG (colonne centrale) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,377 L470,807"></path>
 
           <!-- MRG -> CONVERSION (Non), boucle par au-dessus -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M565,1060 L660,1060"></path>
-          <text class="arc-etiquette" x="600" y="1050">Non</text>
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1025 L760,975 L470,975 L470,1010"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,850 L667,850"></path>
+          <text class="arc-etiquette" x="580" y="842">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,818 L760,780 L470,780 L470,807"></path>
 
           <!-- MRG -> CALC (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1110 L470,1160"></path>
-          <text class="arc-etiquette" x="486" y="1140">Oui</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,890 L470,920"></path>
+          <text class="arc-etiquette" x="484" y="912">Oui</text>
 
           <!-- CALC -> DEPOT -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1220 L470,1260"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,977 L470,1010"></path>
 
-          <!-- DEPOT loops back up to MC_MR -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M590,1290 L880,1290 L880,290 L565,290"></path>
+          <!-- DEPOT boucle en arrière vers MC_MR, tout à droite -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250"></path>
 
           <!-- RESULTAT -> CTN -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1450 L470,1485"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1177 L470,1197"></path>
 
           <!-- CTN -> FIN (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1575 L470,1620"></path>
-          <text class="arc-etiquette" x="486" y="1600">Non</text>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1280 L470,1300"></path>
+          <text class="arc-etiquette" x="484" y="1295">Non</text>
           <!-- CTN -> partie décimale (Oui), pas encore jouable -->
-          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M555,1530 L620,1530"></path>
-          <text class="arc-etiquette" x="575" y="1520">Oui</text>
+          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M535,1240 L607,1240"></path>
+          <text class="arc-etiquette" x="555" y="1232">Oui</text>
         </g>
 
         <!-- ===== Nœuds ===== -->
         <g class="noeud-diagramme" data-noeud="DEBUT">
-          <rect class="noeud-forme" x="370" y="20" width="200" height="60" rx="14"></rect>
+          <rect class="noeud-forme" x="380" y="23" width="180" height="54" rx="13"></rect>
           <text class="noeud-texte" x="470" y="50">DÉBUT</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="MM">
-          <polygon class="noeud-diamant" points="470,115 555,160 470,205 385,160"></polygon>
-          <text class="noeud-texte" x="470" y="160">MM</text>
+          <polygon class="noeud-diamant" points="470,100 535,140 470,180 405,140"></polygon>
+          <text class="noeud-texte" x="470" y="140">MM</text>
         </g>
-        <text class="arc-etiquette" x="20" y="145" font-size="9.5">Quotient = 0 (résultat immédiat)</text>
 
         <g class="noeud-diagramme" data-noeud="MC_MR">
-          <polygon class="noeud-diamant" points="470,240 565,290 470,340 375,290"></polygon>
-          <text class="noeud-texte" x="470" y="290">MC ≥ MR ?</text>
+          <polygon class="noeud-diamant" points="470,210 535,250 470,290 405,250"></polygon>
+          <text class="noeud-texte" x="470" y="250">MC ≥ MR ?</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="EB_SET">
-          <rect class="noeud-forme" x="360" y="390" width="220" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="470" y="420">EB = Oui</text>
+          <rect class="noeud-forme" x="380" y="323" width="180" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="470" y="350">EB = Oui</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="AV">
-          <polygon class="noeud-diamant" points="150,370 235,420 150,470 65,420"></polygon>
-          <text class="noeud-texte" x="150" y="420">AV ?</text>
+          <polygon class="noeud-diamant" points="140,310 205,350 140,390 75,350"></polygon>
+          <text class="noeud-texte" x="140" y="350">AV ?</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="AJUSTEMENT">
-          <rect class="noeud-forme" x="40" y="525" width="220" height="70" rx="14"></rect>
-          <text class="noeud-texte" x="150" y="552">AJUSTEMENT</text>
-          <text class="noeud-texte" x="150" y="572" font-size="10.5" font-style="italic">la fenêtre s'élargit</text>
+          <rect class="noeud-forme" x="50" y="418" width="180" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="140" y="441">AJUSTEMENT</text>
+          <text class="noeud-texte" x="140" y="459" font-size="10" font-style="italic">la fenêtre s'élargit</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="R_MR">
-          <polygon class="noeud-diamant" points="150,630 245,680 150,730 55,680"></polygon>
-          <text class="noeud-texte" x="150" y="680">R ≥ MR ?</text>
+          <polygon class="noeud-diamant" points="140,510 205,550 140,590 75,550"></polygon>
+          <text class="noeud-texte" x="140" y="550">R ≥ MR ?</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="DEPL_ENTIER">
-          <rect class="noeud-forme" x="410" y="650" width="220" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="520" y="680">DÉPL. ENTIER</text>
+          <rect class="noeud-forme" x="230" y="523" width="170" height="54" rx="12"></rect>
+          <text class="noeud-texte" x="315" y="550" font-size="11">DÉPL. ENTIER</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="EB_Q">
-          <polygon class="noeud-diamant" points="150,770 245,820 150,870 55,820"></polygon>
-          <text class="noeud-texte" x="150" y="812">Déjà dans</text>
-          <text class="noeud-texte" x="150" y="828">la boucle ?</text>
+          <polygon class="noeud-diamant" points="140,610 205,650 140,690 75,650"></polygon>
+          <text class="noeud-texte" x="140" y="642" font-size="11">Déjà dans</text>
+          <text class="noeud-texte" x="140" y="658" font-size="11">la boucle ?</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="DEPL_ENTIER">
-          <rect class="noeud-forme" x="40" y="920" width="220" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="150" y="950">DÉPL. ENTIER</text>
+          <rect class="noeud-forme" x="50" y="723" width="180" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="140" y="750">DÉPL. ENTIER</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="MRG">
-          <polygon class="noeud-diamant" points="470,1010 565,1060 470,1110 375,1060"></polygon>
-          <text class="noeud-texte" x="470" y="1060">MRG ?</text>
+          <polygon class="noeud-diamant" points="470,810 535,850 470,890 405,850"></polygon>
+          <text class="noeud-texte" x="470" y="850">MRG ?</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="CONVERSION">
-          <rect class="noeud-forme" x="660" y="1025" width="200" height="70" rx="14"></rect>
-          <text class="noeud-texte" x="760" y="1052">CONVERSION</text>
-          <text class="noeud-texte" x="760" y="1072" font-size="10.5" font-style="italic">emprunt à gauche</text>
+          <rect class="noeud-forme" x="670" y="818" width="180" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="841">CONVERSION</text>
+          <text class="noeud-texte" x="760" y="859" font-size="10" font-style="italic">emprunt à gauche</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="CALC">
-          <rect class="noeud-forme" x="350" y="1160" width="240" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="470" y="1190">MC = MC − MR</text>
+          <rect class="noeud-forme" x="370" y="923" width="200" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="470" y="950">MC = MC − MR</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="DEPOT">
-          <rect class="noeud-forme" x="350" y="1260" width="240" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="470" y="1290">1 pion au Quotient</text>
+          <rect class="noeud-forme" x="370" y="1013" width="200" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="470" y="1040">1 pion au Quotient</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="RESULTAT">
-          <rect class="noeud-forme" x="370" y="1390" width="200" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="470" y="1420">RÉSULTAT</text>
+          <rect class="noeud-forme" x="385" y="1123" width="170" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="470" y="1150">RÉSULTAT</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="CTN">
-          <polygon class="noeud-diamant" points="470,1485 555,1530 470,1575 385,1530"></polygon>
-          <text class="noeud-texte" x="470" y="1530">CTN ?</text>
+          <polygon class="noeud-diamant" points="470,1200 535,1240 470,1280 405,1240"></polygon>
+          <text class="noeud-texte" x="470" y="1240">CTN ?</text>
         </g>
 
         <g class="noeud-diagramme noeud-decimal" data-noeud="DECIMAL">
-          <rect class="noeud-forme" x="620" y="1495" width="280" height="70" rx="14"></rect>
-          <text class="noeud-texte" x="760" y="1522">Partie décimale</text>
-          <text class="noeud-texte" x="760" y="1542" font-size="10.5" font-style="italic">bientôt disponible</text>
+          <rect class="noeud-forme" x="610" y="1208" width="240" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="730" y="1231">Partie décimale</text>
+          <text class="noeud-texte" x="730" y="1249" font-size="10" font-style="italic">bientôt disponible</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="FIN">
-          <rect class="noeud-forme" x="390" y="1620" width="160" height="60" rx="14"></rect>
-          <text class="noeud-texte" x="470" y="1650">FIN</text>
+          <rect class="noeud-forme" x="400" y="1303" width="140" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="470" y="1330">FIN</text>
         </g>
       </svg>
     </div>
