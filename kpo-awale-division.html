@@ -17,10 +17,10 @@
     --alerte: #D8472B;
     --succes: #2F7A4D;
 
-    --bois-1: #B5824C;
-    --bois-2: #8F6234;
-    --bois-3: #6E4A26;
-    --bois-rim: #C99755;
+    --bois-1: #8B5E34;
+    --bois-2: #6B4726;
+    --bois-3: #4A2F18;
+    --bois-rim: #A97847;
     --creux: #2B1A0F;
     --graine-1: #E7B96E;
     --graine-2: #A6672B;
@@ -177,10 +177,11 @@
 
   /* ---- Villages ---- */
   .trous { display: flex; gap: var(--ecart-trous); justify-content: center; align-items: center; }
-  .virgule-decimale {
-    font-size: calc(var(--largeur-trou) * 0.6); font-weight: bold; color: var(--terre);
-    line-height: 1; margin: 0 2px; align-self: flex-end;
-  }
+  .village-decimale { margin-left: calc(var(--ecart-trous) * 0.6); }
+  /* Le Dividende et le Diviseur ne composent pas encore de partie décimale : ces villages
+     restent en réserve, visibles mais éteints, pour la future division proprement décimale. */
+  .trous[data-trous="0"] .village-decimale,
+  .trous[data-trous="1"] .village-decimale { opacity: 0.4; }
   .virgule-lecture { font-weight: bold; color: var(--terre); margin: 0 3px; }
   .trous.rangee-eteinte { opacity: 0.4; filter: saturate(0.3); }
 
@@ -286,6 +287,16 @@
   }
   .village.reserve .badge-ec { opacity: 1; transform: scale(1); }
 
+  /* Petit repère permanent sur R3V1 (le village des unités du Quotient) : il tient lieu de
+     virgule, pour indiquer que la partie décimale du Quotient commence juste après. */
+  .marqueur-virgule {
+    position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--encre); border: 2px solid var(--papier);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+
   /* ---- Colonne vertébrale centrale ---- */
   .colonne-vertebrale { margin: 16px 0 16px; }
   .arete {
@@ -297,7 +308,8 @@
   .legende-centrale { display: flex; gap: var(--ecart-trous); justify-content: center; }
   .legende-item {
     width: var(--largeur-trou); text-align: center; font-size: 9px; letter-spacing: 0.02em;
-    text-transform: uppercase; color: var(--graine-1); opacity: 0.8; line-height: 1.25;
+    text-transform: uppercase; color: var(--papier); line-height: 1.25;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.6);
   }
 
   /* ============ CONTROLES ============ */
@@ -899,6 +911,11 @@
   }
 
   // ---- Construction du plateau (une fois) ----
+  // Nombre de villages réservés à la partie décimale, à la suite des unités, sur chaque
+  // rangée — pour l'instant seul le Quotient les utilise (voir rendreDecimales) ; ceux du
+  // Dividende et du Diviseur préparent la future division proprement décimale.
+  var MAX_VILLAGES_DECIMALES = 2;
+
   function construirePlateau() {
     for (var r = 0; r < 3; r++) {
       var conteneur = document.querySelector('.trous[data-trous="' + r + '"]');
@@ -925,12 +942,40 @@
         badgeEC.textContent = 'EC';
         trou.appendChild(badgeEC);
 
+        // R3V1 : le village de référence du Quotient (les unités). Ce petit repère tient lieu
+        // de virgule — au-delà de ce village commence la partie décimale du Quotient.
+        if (r === 2 && pos === 1) {
+          var marqueurVirgule = document.createElement('div');
+          marqueurVirgule.className = 'marqueur-virgule';
+          marqueurVirgule.title = 'Village de référence : la partie décimale du Quotient commence juste après.';
+          trou.appendChild(marqueurVirgule);
+        }
+
         villageEl.appendChild(trou);
         conteneur.appendChild(villageEl);
 
         trou.addEventListener('click', (function (row, pos) {
           return function () { onPitClick(row, pos); };
         })(r, pos));
+      }
+
+      for (var d = 1; d <= MAX_VILLAGES_DECIMALES; d++) {
+        var villageDec = document.createElement('div');
+        villageDec.className = 'village village-decimale';
+        villageDec.dataset.decimalPos = d;
+        villageDec.dataset.row = r;
+
+        var trouDec = document.createElement('div');
+        trouDec.className = 'trou';
+        var grainesDec = document.createElement('div');
+        grainesDec.className = 'graines';
+        trouDec.appendChild(grainesDec);
+        var badgeGlyphesDec = document.createElement('div');
+        badgeGlyphesDec.className = 'badge-glyphes';
+        trouDec.appendChild(badgeGlyphesDec);
+
+        villageDec.appendChild(trouDec);
+        conteneur.appendChild(villageDec);
       }
     }
   }
@@ -1107,7 +1152,7 @@
   // arithmétique — MRG et Conversion n'ont plus de sens ici, un seul Reste suffit à tout porter.
   // Le nœud CTN attend une réponse du joueur : le `yield` suivant reçoit cette réponse via
   // `generateur.next(reponse)`, exactement comme le ferait une vraie question du logigramme.
-  var MAX_DECIMALES = 8;
+  var MAX_DECIMALES = MAX_VILLAGES_DECIMALES;
   function* genererDecimales(s) {
     var reste = valeurTotale(s.dividende);
     if (reste === 0) return; // déjà exact : rien à continuer
@@ -1585,59 +1630,27 @@
     rendreLogigramme(etat);
   }
 
+  // Les villages décimaux du Quotient existent en dur dès la construction du plateau (voir
+  // construirePlateau) : on se contente ici de refléter etat.qtDecimales sur les 2 villages
+  // fixes, sans plus jamais en créer ou en retirer.
   function rendreDecimales() {
     var conteneur = document.querySelector('.trous[data-trous="2"]');
-    var n = etat.qtDecimales.length;
+    for (var pos = 1; pos <= MAX_VILLAGES_DECIMALES; pos++) {
+      var compte = etat.qtDecimales[pos - 1] || 0;
+      var villageEl = conteneur.querySelector('.village-decimale[data-decimal-pos="' + pos + '"]');
+      var graines = villageEl.querySelector('.graines');
+      var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
 
-    if (n === 0) {
-      var virguleExistante = conteneur.querySelector('.virgule-decimale');
-      if (virguleExistante) virguleExistante.remove();
-      conteneur.querySelectorAll('.village-decimale').forEach(function (el) { el.remove(); });
-      return;
-    }
-
-    if (!conteneur.querySelector('.virgule-decimale')) {
-      var virgule = document.createElement('span');
-      virgule.className = 'virgule-decimale';
-      virgule.textContent = ',';
-      conteneur.appendChild(virgule);
-    }
-
-    var existantes = conteneur.querySelectorAll('.village-decimale').length;
-    for (var i = existantes + 1; i <= n; i++) {
-      var villageEl = document.createElement('div');
-      villageEl.className = 'village village-decimale';
-      villageEl.dataset.decimalPos = i;
-
-      var trou = document.createElement('div');
-      trou.className = 'trou';
-      var graines = document.createElement('div');
-      graines.className = 'graines';
-      trou.appendChild(graines);
-      var badgeGlyphes = document.createElement('div');
-      badgeGlyphes.className = 'badge-glyphes';
-      trou.appendChild(badgeGlyphes);
-
-      villageEl.appendChild(trou);
-      conteneur.appendChild(villageEl);
-    }
-
-    for (var pos = 1; pos <= n; pos++) {
-      var compte = etat.qtDecimales[pos - 1];
-      var villageEl2 = conteneur.querySelector('.village-decimale[data-decimal-pos="' + pos + '"]');
-      var graines2 = villageEl2.querySelector('.graines');
-      var badgeGlyphes2 = villageEl2.querySelector('.badge-glyphes');
-
-      graines2.innerHTML = '';
+      graines.innerHTML = '';
       for (var g = 0; g < compte; g++) {
         var grain = document.createElement('span');
         grain.className = 'graine';
-        graines2.appendChild(grain);
+        graines.appendChild(grain);
       }
 
-      badgeGlyphes2.innerHTML = '';
-      if (compte > 0) badgeGlyphes2.appendChild(creerImg(compte));
-      villageEl2.classList.toggle('avec-glyphe', compte > 0);
+      badgeGlyphes.innerHTML = '';
+      if (compte > 0) badgeGlyphes.appendChild(creerImg(compte));
+      villageEl.classList.toggle('avec-glyphe', compte > 0);
     }
   }
 
