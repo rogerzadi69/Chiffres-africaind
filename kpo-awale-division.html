@@ -1174,7 +1174,7 @@
     etatDemo = creerEtatDemo(dividendeArr, diviseurArr);
 
     var mm = etatDemo.nD >= etatDemo.m;
-    etatDemo.journal.push(pas('MM', 'MM : la rangée du haut a-t-elle au moins autant de villages que la rangée du milieu (' + etatDemo.m + ') ? → ' + texteOuiNon(mm), {}));
+    etatDemo.journal.push(pas('MM', 'MM (Même Modèle) : nMC ≥ nMR ? ' + etatDemo.nD + ' ≥ ' + etatDemo.m + ' → ' + texteOuiNon(mm), {}));
 
     document.getElementById('btn-demo-demarrer').hidden = true;
     document.getElementById('btn-demo-quitter').hidden = false;
@@ -1185,7 +1185,7 @@
       etatDemo.noeudActif = 'MM';
       document.getElementById('btn-demo-suivant').hidden = false;
     } else {
-      etatDemo.journal.push(pas('RESULTAT', 'La rangée du milieu est plus large que la rangée du haut : Quotient nul d’emblée.', {}));
+      etatDemo.journal.push(pas('RESULTAT', 'nMR > nMC : MR ne tient pas dans le nombre de villages disponibles, Quotient nul d’emblée.', {}));
       etatDemo.noeudActif = 'RESULTAT';
       document.getElementById('btn-demo-suivant').hidden = true;
     }
