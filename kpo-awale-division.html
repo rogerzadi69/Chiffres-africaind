@@ -17,10 +17,10 @@
     --alerte: #D8472B;
     --succes: #2F7A4D;
 
-    --bois-1: #B5824C;
-    --bois-2: #8F6234;
-    --bois-3: #6E4A26;
-    --bois-rim: #C99755;
+    --bois-1: #8B5E34;
+    --bois-2: #6B4726;
+    --bois-3: #4A2F18;
+    --bois-rim: #A97847;
     --creux: #2B1A0F;
     --graine-1: #E7B96E;
     --graine-2: #A6672B;
@@ -176,7 +176,13 @@
   .remarque-conservation.visible { opacity: 1; max-height: 140px; margin-bottom: 22px; }
 
   /* ---- Villages ---- */
-  .trous { display: flex; gap: var(--ecart-trous); justify-content: center; }
+  .trous { display: flex; gap: var(--ecart-trous); justify-content: center; align-items: center; }
+  .village-decimale { margin-left: calc(var(--ecart-trous) * 0.6); }
+  /* Le Dividende et le Diviseur ne composent pas encore de partie décimale : ces villages
+     restent en réserve, visibles mais éteints, pour la future division proprement décimale. */
+  .trous[data-trous="0"] .village-decimale,
+  .trous[data-trous="1"] .village-decimale { opacity: 0.4; }
+  .virgule-lecture { font-weight: bold; color: var(--terre); margin: 0 3px; }
   .trous.rangee-eteinte { opacity: 0.4; filter: saturate(0.3); }
 
   .village { display: flex; flex-direction: column; align-items: center; position: relative; }
@@ -281,6 +287,16 @@
   }
   .village.reserve .badge-ec { opacity: 1; transform: scale(1); }
 
+  /* Petit repère permanent sur R3V1 (le village des unités du Quotient) : il tient lieu de
+     virgule, pour indiquer que la partie décimale du Quotient commence juste après. */
+  .marqueur-virgule {
+    position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--encre); border: 2px solid var(--papier);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+
   /* ---- Colonne vertébrale centrale ---- */
   .colonne-vertebrale { margin: 16px 0 16px; }
   .arete {
@@ -292,11 +308,13 @@
   .legende-centrale { display: flex; gap: var(--ecart-trous); justify-content: center; }
   .legende-item {
     width: var(--largeur-trou); text-align: center; font-size: 9px; letter-spacing: 0.02em;
-    text-transform: uppercase; color: var(--graine-1); opacity: 0.8; line-height: 1.25;
+    text-transform: uppercase; color: var(--papier); line-height: 1.25;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.6);
   }
 
   /* ============ CONTROLES ============ */
   .controles-phase { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 22px; }
+  .controles-phase[hidden] { display: none; }
   .btn-avancer {
     font-size: 14px; letter-spacing: 0.06em; color: #fff;
     background: var(--terre); border: none; border-radius: 24px;
@@ -532,6 +550,12 @@
 
   <p class="succes-final" id="succes-final"></p>
 
+  <div class="controles-phase" id="controles-ctn" hidden>
+    <p class="ctn-question">Veux-tu continuer l'opération pour obtenir un Quotient décimal (CTN) ?</p>
+    <button class="btn-avancer" id="btn-ctn-oui">Oui, continuer →</button>
+    <button class="btn-recommencer" id="btn-ctn-non">Non, arrêter ici</button>
+  </div>
+
   <section class="journal">
     <h2>Le raisonnement, variable après variable</h2>
     <div class="journal-corps" id="journal-corps">
@@ -546,12 +570,14 @@
     <div class="controles-phase">
       <button class="btn-avancer" id="btn-demo-demarrer">▶ Démarrer le logigramme</button>
       <button class="btn-avancer" id="btn-demo-suivant" hidden>Suivant →</button>
+      <button class="btn-avancer" id="btn-demo-ctn-oui" hidden>Oui, continuer →</button>
+      <button class="btn-recommencer" id="btn-demo-ctn-non" hidden>Non, arrêter ici</button>
       <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter le logigramme</button>
     </div>
     <p class="demo-bandeau" id="demo-bandeau" hidden>Déroulement du logigramme en cours — indépendant du jeu, ta partie n'est pas modifiée.</p>
     <div class="logigramme-enveloppe">
       <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
-      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1400" xmlns="http://www.w3.org/2000/svg">
+      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1500" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--encre-pale)"></path>
@@ -628,9 +654,24 @@
           <!-- CTN -> FIN (Non) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1280 L470,1300" data-vers="FIN"></path>
           <text class="arc-etiquette" x="484" y="1295">Non</text>
-          <!-- CTN -> partie décimale (Oui), pas encore jouable -->
-          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M535,1240 L607,1240" data-vers="DECIMAL"></path>
-          <text class="arc-etiquette" x="555" y="1232">Oui</text>
+
+          <!-- CTN -> AJUSTEMENT_DEC (Oui) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,1240 L650,1232" data-vers="AJUSTEMENT_DEC"></path>
+          <text class="arc-etiquette" x="555" y="1224">Oui</text>
+
+          <!-- AJUSTEMENT_DEC -> CALC_DEC -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1264 L760,1300" data-vers="CALC_DEC"></path>
+
+          <!-- CALC_DEC -> DEPOT_DEC -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1354 L760,1390" data-vers="DEPOT_DEC"></path>
+
+          <!-- DEPOT_DEC boucle vers CTN : encore une décimale ? -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M870,1417 L905,1417 L905,1240 L538,1240" data-vers="CTN"></path>
+          <text class="arc-etiquette" x="800" y="1210">encore ?</text>
+
+          <!-- DEPOT_DEC -> FIN, quand le Reste tombe exactement à zéro -->
+          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M650,1443 L470,1443 L470,1358" data-vers="FIN"></path>
+          <text class="arc-etiquette" x="490" y="1440">Reste = 0</text>
         </g>
 
         <!-- ===== Nœuds ===== -->
@@ -717,10 +758,21 @@
           <text class="noeud-texte" x="470" y="1240">CTN ?</text>
         </g>
 
-        <g class="noeud-diagramme noeud-decimal" data-noeud="DECIMAL">
-          <rect class="noeud-forme" x="610" y="1208" width="240" height="64" rx="13"></rect>
-          <text class="noeud-texte" x="730" y="1231">Partie décimale</text>
-          <text class="noeud-texte" x="730" y="1249" font-size="10" font-style="italic">bientôt disponible</text>
+        <g class="noeud-diagramme" data-noeud="AJUSTEMENT_DEC">
+          <rect class="noeud-forme" x="650" y="1200" width="220" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1223" font-size="12">AJUSTEMENT</text>
+          <text class="noeud-texte" x="760" y="1241" font-size="10" font-style="italic">Reste ×10, MR se réajuste</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="CALC_DEC">
+          <rect class="noeud-forme" x="650" y="1300" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1327" font-size="12">MC = MC − MR</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="DEPOT_DEC">
+          <rect class="noeud-forme" x="650" y="1390" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1411" font-size="11">Pion(s) au village</text>
+          <text class="noeud-texte" x="760" y="1427" font-size="11">décimal suivant</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="FIN">
@@ -766,13 +818,19 @@
     dernierNoeudDefile: null,  // évite de refaire défiler la page vers un nœud déjà visé
     dividendeDepart: 0,   // valeur du Dividende au tout début, pour rappeler l'opération au résultat
     diviseurDepart: 0,
-    demoActive: false     // vrai pendant que la démonstration indépendante du logigramme tourne
+    demoActive: false,    // vrai pendant que la démonstration indépendante du logigramme tourne
+    qtDecimales: [],      // chiffres décimaux du Quotient, dans l'ordre (CTN)
+    resteDecimal: 0,      // reste courant pendant la boucle CTN (nombre, plus un tableau de villages)
+    attenteCTN: false,    // vrai quand le générateur est en pause, en attente d'une réponse Oui/Non à CTN
+    raisonFinDecimale: null  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
   };
 
   var LIBELLES_NOEUDS = {
     MM: 'MM', MC_MR: 'MC ≥ MR', EB_SET: 'EB', MRG: 'MRG', CONVERSION: 'Conversion',
     CALC: 'MC = MC − MR', DEPOT: '+1 au QT', AV: 'AV', AJUSTEMENT: 'Ajustement',
-    R_MR: 'R ≥ MR', EB_Q: 'EB ?', DEPL_ENTIER: 'Dépl. Entier', RESULTAT: 'Résultat'
+    R_MR: 'R ≥ MR', EB_Q: 'EB ?', DEPL_ENTIER: 'Dépl. Entier', RESULTAT: 'Résultat',
+    CTN: 'CTN ?', AJUSTEMENT_DEC: 'Ajustement (décimal)', CALC_DEC: 'MC = MC − MR (décimal)',
+    DEPOT_DEC: '+1 décimale au QT', FIN: 'Fin'
   };
 
   function creerImg(chiffre) {
@@ -853,6 +911,11 @@
   }
 
   // ---- Construction du plateau (une fois) ----
+  // Nombre de villages réservés à la partie décimale, à la suite des unités, sur chaque
+  // rangée — pour l'instant seul le Quotient les utilise (voir rendreDecimales) ; ceux du
+  // Dividende et du Diviseur préparent la future division proprement décimale.
+  var MAX_VILLAGES_DECIMALES = 2;
+
   function construirePlateau() {
     for (var r = 0; r < 3; r++) {
       var conteneur = document.querySelector('.trous[data-trous="' + r + '"]');
@@ -879,12 +942,40 @@
         badgeEC.textContent = 'EC';
         trou.appendChild(badgeEC);
 
+        // R3V1 : le village de référence du Quotient (les unités). Ce petit repère tient lieu
+        // de virgule — au-delà de ce village commence la partie décimale du Quotient.
+        if (r === 2 && pos === 1) {
+          var marqueurVirgule = document.createElement('div');
+          marqueurVirgule.className = 'marqueur-virgule';
+          marqueurVirgule.title = 'Village de référence : la partie décimale du Quotient commence juste après.';
+          trou.appendChild(marqueurVirgule);
+        }
+
         villageEl.appendChild(trou);
         conteneur.appendChild(villageEl);
 
         trou.addEventListener('click', (function (row, pos) {
           return function () { onPitClick(row, pos); };
         })(r, pos));
+      }
+
+      for (var d = 1; d <= MAX_VILLAGES_DECIMALES; d++) {
+        var villageDec = document.createElement('div');
+        villageDec.className = 'village village-decimale';
+        villageDec.dataset.decimalPos = d;
+        villageDec.dataset.row = r;
+
+        var trouDec = document.createElement('div');
+        trouDec.className = 'trou';
+        var grainesDec = document.createElement('div');
+        grainesDec.className = 'graines';
+        trouDec.appendChild(grainesDec);
+        var badgeGlyphesDec = document.createElement('div');
+        badgeGlyphesDec.className = 'badge-glyphes';
+        trouDec.appendChild(badgeGlyphesDec);
+
+        villageDec.appendChild(trouDec);
+        conteneur.appendChild(villageDec);
       }
     }
   }
@@ -903,6 +994,13 @@
 
   function flashClasse(r, pos, classe, duree) {
     var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
+    if (!villageEl) return;
+    villageEl.classList.add(classe);
+    setTimeout(function () { villageEl.classList.remove(classe); }, duree || 700);
+  }
+
+  function flashClasseDecimale(position, classe, duree) {
+    var villageEl = document.querySelector('.trous[data-trous="2"] .village[data-decimal-pos="' + position + '"]');
     if (!villageEl) return;
     villageEl.classList.add(classe);
     setTimeout(function () { villageEl.classList.remove(classe); }, duree || 700);
@@ -995,8 +1093,9 @@
           var villageDispo = lp > 0;
           yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
           if (!villageDispo) {
-            yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici.', {});
+            yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici pour la partie entière.', {});
             s.termine = true;
+            yield* genererDecimales(s);
             return;
           }
           var villagePuissance = lp - 1;
@@ -1046,6 +1145,46 @@
       yield { finDeTour: true };
     }
   }
+
+  // Prolonge la division au-delà du Reste entier, pour obtenir un Quotient décimal (CTN).
+  // Une fois le Dividende entièrement consommé, il n'y a plus de vrais villages à consulter :
+  // chaque cycle « descend un zéro » (le Reste ×10) et calcule une décimale de plus par simple
+  // arithmétique — MRG et Conversion n'ont plus de sens ici, un seul Reste suffit à tout porter.
+  // Le nœud CTN attend une réponse du joueur : le `yield` suivant reçoit cette réponse via
+  // `generateur.next(reponse)`, exactement comme le ferait une vraie question du logigramme.
+  var MAX_DECIMALES = MAX_VILLAGES_DECIMALES;
+  function* genererDecimales(s) {
+    var reste = valeurTotale(s.dividende);
+    if (reste === 0) return; // déjà exact : rien à continuer
+    var MRv = valeurMR(s);
+    s.resteDecimal = reste;
+    s.qtDecimales = [];
+
+    while (s.qtDecimales.length < MAX_DECIMALES) {
+      var continuer = yield pas('CTN', 'Veux-tu continuer l’opération pour obtenir un Quotient décimal (CTN) ? Reste actuel : ' + s.resteDecimal + '.', { reste: s.resteDecimal });
+      if (!continuer) {
+        yield pas('FIN', 'Arrêt à la demande : le Quotient garde les décimales déjà trouvées.', { raison: 'refus' });
+        return;
+      }
+
+      var etendu = s.resteDecimal * 10;
+      yield pas('AJUSTEMENT_DEC', 'Ajustement : le Reste se décale d’un village vers la gauche (× 10) → ' + etendu.toLocaleString('fr-FR') + ' ; MR se réajuste.', { etendu: etendu });
+
+      var chiffre = Math.floor(etendu / MRv);
+      var apres = etendu - chiffre * MRv;
+      yield pas('CALC_DEC', 'Calcul : MC = MC − MR (' + etendu.toLocaleString('fr-FR') + ' − ' + (chiffre * MRv).toLocaleString('fr-FR') + ' = ' + apres.toLocaleString('fr-FR') + ').', {});
+
+      s.qtDecimales.push(chiffre);
+      s.resteDecimal = apres;
+      yield pas('DEPOT_DEC', chiffre + ' pion(s) déposé(s) dans le village décimal n°' + s.qtDecimales.length + ' du Quotient.', { chiffre: chiffre, position: s.qtDecimales.length });
+
+      if (apres === 0) {
+        yield pas('FIN', 'Reste = 0 : la division décimale est exacte, elle s’arrête ici.', { raison: 'exact' });
+        return;
+      }
+    }
+    yield pas('FIN', 'Limite de ' + MAX_DECIMALES + ' décimales atteinte : on s’arrête ici (le calcul pourrait sinon continuer indéfiniment).', { raison: 'plafond' });
+  }
   // Chaque nœud garde l'écran un temps différent : les conversions et les ajustements,
   // les plus difficiles à suivre, restent affichés bien plus longtemps que les autres.
   var DUREES_PAS = {
@@ -1075,14 +1214,17 @@
       animerVillages(0, p.vars.positions, 'retrait-anime', 1200);
     } else if (p.noeud === 'DEPOT') {
       flashClasse(2, 1, 'depot-anime', 1200);
+    } else if (p.noeud === 'DEPOT_DEC') {
+      flashClasseDecimale(p.vars.position, 'depot-anime', 1200);
     }
   }
 
   // Ce déroulement ne touche jamais le journal ni le logigramme SVG : jouer sur le plateau
   // reste une activité à part, purement gestuelle (pions qui bougent), du raisonnement affiché
   // en détail — celui-ci ne s'active plus que via son propre bouton (voir plus bas).
-  function avancerGenerateur() {
-    var resultat = etat.generateur.next();
+  // CTN est la seule vraie question posée pendant la partie réelle : le générateur s'y met en
+  // pause (voir repondreCTN) au lieu d'enchaîner automatiquement comme pour les autres nœuds.
+  function traiterResultatGenerateur(resultat) {
     if (resultat.done) {
       etat.enAnimation = false;
       rendreTout();
@@ -1094,10 +1236,33 @@
       rendreTout();
       return;
     }
+    if (p.noeud === 'CTN') {
+      etat.enAnimation = false;
+      etat.attenteCTN = true;
+      rendreTout();
+      return;
+    }
+    if (p.noeud === 'FIN') {
+      etat.raisonFinDecimale = p.vars.raison;
+    }
     declencherAnimationPlateau(p);
     rendreTout();
-    setTimeout(avancerGenerateur, dureePas(p.noeud));
+    setTimeout(function () { traiterResultatGenerateur(etat.generateur.next()); }, dureePas(p.noeud));
   }
+
+  function avancerGenerateur() {
+    traiterResultatGenerateur(etat.generateur.next());
+  }
+
+  function repondreCTN(reponse) {
+    if (!etat.generateur || !etat.attenteCTN) return;
+    etat.attenteCTN = false;
+    etat.enAnimation = true;
+    traiterResultatGenerateur(etat.generateur.next(reponse));
+  }
+
+  document.getElementById('btn-ctn-oui').addEventListener('click', function () { repondreCTN(true); });
+  document.getElementById('btn-ctn-non').addEventListener('click', function () { repondreCTN(false); });
 
   // Une etape de jeu = un clic sur le Diviseur : le generateur avance jusqu'au
   // prochain depot (ou jusqu'a la fin), en devoilant une variable a la fois.
@@ -1136,7 +1301,8 @@
       MR: [], m: 0, nD: 0, windowShift: 0, qtDigits: {},
       dejaCalcule: false, termine: false, generateur: null,
       journal: [], noeudActif: null, dernierNoeudDefile: null,
-      dividendeDepart: 0, diviseurDepart: 0
+      dividendeDepart: 0, diviseurDepart: 0,
+      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1174,7 +1340,7 @@
     etatDemo = creerEtatDemo(dividendeArr, diviseurArr);
 
     var mm = etatDemo.nD >= etatDemo.m;
-    etatDemo.journal.push(pas('MM', 'MM : la rangée du haut a-t-elle au moins autant de villages que la rangée du milieu (' + etatDemo.m + ') ? → ' + texteOuiNon(mm), {}));
+    etatDemo.journal.push(pas('MM', 'MM (Même Modèle) : nMC ≥ nMR ? ' + etatDemo.nD + ' ≥ ' + etatDemo.m + ' → ' + texteOuiNon(mm), {}));
 
     document.getElementById('btn-demo-demarrer').hidden = true;
     document.getElementById('btn-demo-quitter').hidden = false;
@@ -1185,7 +1351,7 @@
       etatDemo.noeudActif = 'MM';
       document.getElementById('btn-demo-suivant').hidden = false;
     } else {
-      etatDemo.journal.push(pas('RESULTAT', 'La rangée du milieu est plus large que la rangée du haut : Quotient nul d’emblée.', {}));
+      etatDemo.journal.push(pas('RESULTAT', 'nMR > nMC : MR ne tient pas dans le nombre de villages disponibles, Quotient nul d’emblée.', {}));
       etatDemo.noeudActif = 'RESULTAT';
       document.getElementById('btn-demo-suivant').hidden = true;
     }
@@ -1201,7 +1367,7 @@
   // (`finDeTour`), qui ne correspondent à aucune case visible du schéma, sont sautés
   // automatiquement pour qu'aucun clic ne « tombe dans le vide ».
   function avancerDemo() {
-    if (!etatDemo || !etatDemo.generateur || etatDemo.noeudActif === 'RESULTAT') return;
+    if (!etatDemo || !etatDemo.generateur || etatDemo.attenteCTN) return;
     var resultat;
     do {
       resultat = etatDemo.generateur.next();
@@ -1217,9 +1383,33 @@
     etatDemo.noeudActif = p.noeud;
     etatDemo.journal.push(p);
     rendreDemo();
-    if (p.noeud === 'RESULTAT') {
+
+    if (p.noeud === 'CTN') {
+      etatDemo.attenteCTN = true;
       document.getElementById('btn-demo-suivant').hidden = true;
+      document.getElementById('btn-demo-ctn-oui').hidden = false;
+      document.getElementById('btn-demo-ctn-non').hidden = false;
     }
+  }
+
+  function repondreCTNDemo(reponse) {
+    if (!etatDemo || !etatDemo.attenteCTN) return;
+    etatDemo.attenteCTN = false;
+    document.getElementById('btn-demo-ctn-oui').hidden = true;
+    document.getElementById('btn-demo-ctn-non').hidden = true;
+    document.getElementById('btn-demo-suivant').hidden = false;
+
+    var resultat = etatDemo.generateur.next(reponse);
+    if (resultat.done) {
+      etatDemo.noeudActif = null;
+      document.getElementById('btn-demo-suivant').hidden = true;
+      rendreDemo();
+      return;
+    }
+    var p = resultat.value;
+    etatDemo.noeudActif = p.noeud;
+    etatDemo.journal.push(p);
+    rendreDemo();
   }
 
   function quitterDemo() {
@@ -1227,6 +1417,8 @@
     etatDemo = null;
     document.getElementById('btn-demo-demarrer').hidden = false;
     document.getElementById('btn-demo-suivant').hidden = true;
+    document.getElementById('btn-demo-ctn-oui').hidden = true;
+    document.getElementById('btn-demo-ctn-non').hidden = true;
     document.getElementById('btn-demo-quitter').hidden = true;
     document.getElementById('demo-bandeau').hidden = true;
     rendreTout(); // restaure le plateau réel — le journal et le schéma restent vides, comme pendant tout le jeu
@@ -1234,6 +1426,8 @@
 
   document.getElementById('btn-demo-demarrer').addEventListener('click', demarrerDemo);
   document.getElementById('btn-demo-suivant').addEventListener('click', avancerDemo);
+  document.getElementById('btn-demo-ctn-oui').addEventListener('click', function () { repondreCTNDemo(true); });
+  document.getElementById('btn-demo-ctn-non').addEventListener('click', function () { repondreCTNDemo(false); });
   document.getElementById('btn-demo-quitter').addEventListener('click', quitterDemo);
 
 
@@ -1347,10 +1541,15 @@
       else if (r === 1) valeurLigne = (etat.phase === 'composition') ? valeurTotale(etat.diviseur) : valeurMR(etat);
       else valeurLigne = valeurQuotient();
 
-      document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = valeurLigne.toLocaleString('fr-FR');
-      document.querySelector('[data-lecture-lettres="' + r + '"]').textContent = nombreEnLettres(valeurLigne);
+      var texteArabe = valeurLigne.toLocaleString('fr-FR');
+      var texteLettres = nombreEnLettres(valeurLigne);
+      if (r === 2 && etat.qtDecimales.length > 0) {
+        texteArabe += ',' + etat.qtDecimales.join('');
+        texteLettres += ' virgule ' + etat.qtDecimales.map(function (d) { return UNITES[d]; }).join(' ');
+      }
+      document.querySelector('[data-lecture-arabe="' + r + '"]').textContent = texteArabe;
+      document.querySelector('[data-lecture-lettres="' + r + '"]').textContent = texteLettres;
 
-      var rowPourLecture = (r === 2) ? rowAffichee : rowAffichee;
       var digitsGaucheADroite = rowAffichee.slice().reverse();
       var lectureAfricaine = document.querySelector('[data-lecture-africaine="' + r + '"]');
       lectureAfricaine.innerHTML = '';
@@ -1365,6 +1564,13 @@
           lectureAfricaine.appendChild(groupe);
         }
       });
+      if (r === 2 && etat.qtDecimales.length > 0) {
+        var virguleLecture = document.createElement('span');
+        virguleLecture.className = 'virgule-lecture';
+        virguleLecture.textContent = ',';
+        lectureAfricaine.appendChild(virguleLecture);
+        etat.qtDecimales.forEach(function (d) { lectureAfricaine.appendChild(creerImg(d)); });
+      }
 
       var btnVider = document.querySelector('.btn-vider[data-row="' + r + '"]');
       if (btnVider) btnVider.disabled = etat.phase !== 'composition';
@@ -1395,18 +1601,57 @@
 
     var succesEl = document.getElementById('succes-final');
     if (etat.termine) {
-      var texteQT = valeurQuotient().toLocaleString('fr-FR');
+      var texteQTEntier = valeurQuotient().toLocaleString('fr-FR');
+      var texteQTComplet = texteQTEntier + (etat.qtDecimales.length > 0 ? ',' + etat.qtDecimales.join('') : '');
       var texteReste = valeurTotale(etat.dividende).toLocaleString('fr-FR');
       var texteDepart = etat.dividendeDepart.toLocaleString('fr-FR') + ' ÷ ' + etat.diviseurDepart.toLocaleString('fr-FR');
-      succesEl.innerHTML = '<span class="operation-rappel">' + texteDepart + ' = ' + texteQT + ', reste ' + texteReste + '</span>' +
-        '<strong>Quotient : ' + texteQT + '</strong>Reste : ' + texteReste + '. Bravo, la division est exacte, fenêtre après fenêtre.';
+
+      var phraseFinale;
+      if (etat.qtDecimales.length === 0) {
+        phraseFinale = '<strong>Quotient : ' + texteQTEntier + '</strong>Reste : ' + texteReste + '. Bravo, la division est exacte, fenêtre après fenêtre.';
+      } else if (etat.raisonFinDecimale === 'exact') {
+        phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '</strong>La division décimale tombe juste (reste = 0).';
+      } else if (etat.raisonFinDecimale === 'plafond') {
+        phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '…</strong>Le calcul pourrait continuer indéfiniment (limité à ' + MAX_DECIMALES + ' décimales ici).';
+      } else {
+        phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '</strong>Arrêté à ta demande — le reste n’est pas encore nul, tu pourrais continuer plus loin.';
+      }
+      succesEl.innerHTML = '<span class="operation-rappel">' + texteDepart + ' = ' + texteQTComplet + (etat.qtDecimales.length === 0 ? ', reste ' + texteReste : '') + '</span>' + phraseFinale;
       succesEl.classList.add('visible');
     } else {
       succesEl.classList.remove('visible');
     }
 
+    var controlesCTN = document.getElementById('controles-ctn');
+    controlesCTN.hidden = !etat.attenteCTN;
+
+    rendreDecimales();
     rendreJournal(etat);
     rendreLogigramme(etat);
+  }
+
+  // Les villages décimaux du Quotient existent en dur dès la construction du plateau (voir
+  // construirePlateau) : on se contente ici de refléter etat.qtDecimales sur les 2 villages
+  // fixes, sans plus jamais en créer ou en retirer.
+  function rendreDecimales() {
+    var conteneur = document.querySelector('.trous[data-trous="2"]');
+    for (var pos = 1; pos <= MAX_VILLAGES_DECIMALES; pos++) {
+      var compte = etat.qtDecimales[pos - 1] || 0;
+      var villageEl = conteneur.querySelector('.village-decimale[data-decimal-pos="' + pos + '"]');
+      var graines = villageEl.querySelector('.graines');
+      var badgeGlyphes = villageEl.querySelector('.badge-glyphes');
+
+      graines.innerHTML = '';
+      for (var g = 0; g < compte; g++) {
+        var grain = document.createElement('span');
+        grain.className = 'graine';
+        graines.appendChild(grain);
+      }
+
+      badgeGlyphes.innerHTML = '';
+      if (compte > 0) badgeGlyphes.appendChild(creerImg(compte));
+      villageEl.classList.toggle('avec-glyphe', compte > 0);
+    }
   }
 
   // Ce m\u00eame panneau sert aussi bien au jeu r\u00e9el (toujours vide, d\u00e9sormais, puisque jouer
@@ -1515,6 +1760,10 @@
     etat.journal = [];
     etat.dividendeDepart = valeurTotale(etat.dividende);
     etat.diviseurDepart = valeurTotale(etat.diviseur);
+    etat.qtDecimales = [];
+    etat.resteDecimal = 0;
+    etat.attenteCTN = false;
+    etat.raisonFinDecimale = null;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1545,6 +1794,10 @@
     etat.dernierNoeudDefile = null;
     etat.dividendeDepart = 0;
     etat.diviseurDepart = 0;
+    etat.qtDecimales = [];
+    etat.resteDecimal = 0;
+    etat.attenteCTN = false;
+    etat.raisonFinDecimale = null;
     afficherMessage('');
     rendreTout();
   });
