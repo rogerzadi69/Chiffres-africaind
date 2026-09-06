@@ -1690,9 +1690,14 @@
       el.classList.toggle('actif', actif);
       if (actif && !premierActif) premierActif = el;
     });
-    // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée.
+    // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée —
+    // sauf pour MC_MR et MRG, qui reçoivent chacun plusieurs flèches différentes de plusieurs
+    // côtés à la fois : les animer toutes ensemble brouille le losange plutôt que d'aider à le
+    // repérer, la surbrillance du losange suffit.
     document.querySelectorAll('.arc-logigramme').forEach(function (el) {
-      el.classList.toggle('actif', s.noeudActif !== null && el.dataset.vers === s.noeudActif);
+      var versNoeudAnime = s.noeudActif !== null && el.dataset.vers === s.noeudActif
+        && s.noeudActif !== 'MC_MR' && s.noeudActif !== 'MRG';
+      el.classList.toggle('actif', versNoeudAnime);
     });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
     // toujours exactement où en est le raisonnement, même sur un long logigramme.
