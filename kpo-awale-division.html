@@ -434,6 +434,32 @@
     border-width: 7px 6px 0 6px; border-style: solid; border-color: var(--graine-1) transparent transparent transparent;
   }
   .bulle-logigramme[hidden] { display: none; }
+  /* Variantes d'orientation : dans les zones du logigramme trop serrées pour loger la bulle
+     au-dessus du nœud sans en cacher un autre (ex. AJUSTEMENT juste au-dessus de R ≥ MR ?),
+     positionnerBulle() choisit la première orientation libre — dessous, à droite, à gauche —
+     et déplace la petite pointe du même côté. */
+  .bulle-logigramme.bulle-en-dessous::after {
+    bottom: auto; top: -9px; border-width: 0 8px 9px 8px; border-color: transparent transparent var(--terre) transparent;
+  }
+  .bulle-logigramme.bulle-en-dessous::before {
+    bottom: auto; top: -6px; border-width: 0 6px 7px 6px; border-color: transparent transparent var(--graine-1) transparent;
+  }
+  .bulle-logigramme.bulle-a-droite::after {
+    left: -9px; bottom: auto; top: 50%; transform: translateY(-50%);
+    border-width: 8px 9px 8px 0; border-color: transparent var(--terre) transparent transparent;
+  }
+  .bulle-logigramme.bulle-a-droite::before {
+    left: -6px; bottom: auto; top: 50%; transform: translateY(-50%);
+    border-width: 6px 7px 6px 0; border-color: transparent var(--graine-1) transparent transparent;
+  }
+  .bulle-logigramme.bulle-a-gauche::after {
+    left: auto; right: -9px; bottom: auto; top: 50%; transform: translateY(-50%);
+    border-width: 8px 0 8px 9px; border-color: transparent transparent transparent var(--terre);
+  }
+  .bulle-logigramme.bulle-a-gauche::before {
+    left: auto; right: -6px; bottom: auto; top: 50%; transform: translateY(-50%);
+    border-width: 6px 0 6px 7px; border-color: transparent transparent transparent var(--graine-1);
+  }
 
   /* ============ NOTE ============ */
   .apropos {
@@ -592,7 +618,7 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR" data-condition="avant-calcul"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT" data-condition="resultat-depuis-mm"></path>
           <text class="arc-etiquette" x="330" y="132">Non</text>
 
           <!-- MC_MR -> EB_SET (Oui) -->
@@ -606,7 +632,7 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,390 L140,415" data-vers="AJUSTEMENT"></path>
           <text class="arc-etiquette" x="154" y="407">Oui</text>
           <!-- AV -> RESULTAT (Non), longe une marge un peu plus interne -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150" data-vers="RESULTAT"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150" data-vers="RESULTAT" data-condition="resultat-depuis-av"></path>
           <text class="arc-etiquette" x="42" y="342">Non</text>
 
           <!-- AJUSTEMENT -> R_MR -->
@@ -829,8 +855,11 @@
     calculEffectue: false, // vrai dès qu'un premier calcul principal (MC = MC − MR) a eu lieu —
                            // distingue, sur le losange MC ≥ MR, la flèche d'entrée (depuis MM,
                            // avant tout calcul) de la flèche de bouclage (depuis 1 pion au Quotient)
-    avApresDeplEntier: false  // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
+    avApresDeplEntier: false, // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
                               // vient tout juste de MC_MR — distingue les deux flèches d'entrée d'AV
+    resultatDepuisAV: false  // vrai si on atteint RÉSULTAT depuis AV (plus de village disponible),
+                             // faux si c'est depuis MM (MR ne tient pas dans le Dividende d'emblée)
+                             // — distingue les deux flèches d'entrée de RÉSULTAT
   };
 
   var LIBELLES_NOEUDS = {
@@ -1102,6 +1131,7 @@
           var villageDispo = lp > 0;
           yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
           if (!villageDispo) {
+            s.resultatDepuisAV = true; // RÉSULTAT est atteint depuis AV, pas depuis MM
             yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici pour la partie entière.', {});
             s.termine = true;
             yield* genererDecimales(s);
@@ -1314,7 +1344,7 @@
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0,
       qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null,
-      calculEffectue: false, avApresDeplEntier: false
+      calculEffectue: false, avApresDeplEntier: false, resultatDepuisAV: false
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1702,7 +1732,9 @@
     'avant-calcul': function (s) { return !s.calculEffectue; },
     'apres-calcul': function (s) { return s.calculEffectue; },
     'avant-depl': function (s) { return !s.avApresDeplEntier; },
-    'apres-depl': function (s) { return s.avApresDeplEntier; }
+    'apres-depl': function (s) { return s.avApresDeplEntier; },
+    'resultat-depuis-mm': function (s) { return !s.resultatDepuisAV; },
+    'resultat-depuis-av': function (s) { return s.resultatDepuisAV; }
   };
 
   function rendreLogigramme(s) {
@@ -1735,8 +1767,11 @@
     positionnerBulle(premierActif, s);
   }
 
-  // La bulle flotte juste au-dessus du nœud actif et reprend le texte de la
-  // dernière ligne du journal : les variables suivent le déplacement de la logique.
+  // La bulle flotte juste à côté du nœud actif et reprend le texte de la dernière ligne du
+  // journal : les variables suivent le déplacement de la logique. Certaines zones du schéma
+  // (la colonne AV / AJUSTEMENT / R ≥ MR ? / DÉPL. ENTIER / Déjà dans la boucle ?) sont trop
+  // serrées pour toujours loger la bulle au-dessus sans qu'elle recouvre le nœud voisin — on
+  // essaie donc plusieurs orientations et on garde la première qui ne chevauche aucun autre nœud.
   function positionnerBulle(elementActif, s) {
     var bulle = document.getElementById('bulle-logigramme');
     var enveloppe = document.querySelector('.logigramme-enveloppe');
@@ -1747,17 +1782,69 @@
     var derniere = s.journal[s.journal.length - 1];
     bulle.textContent = derniere.texte;
     bulle.hidden = false;
+    bulle.classList.remove('bulle-en-dessous', 'bulle-a-droite', 'bulle-a-gauche');
 
     if (typeof elementActif.getBoundingClientRect !== 'function') return;
     var rectNoeud = elementActif.getBoundingClientRect();
     var rectEnv = enveloppe.getBoundingClientRect();
     if (rectNoeud.width === 0 && rectNoeud.height === 0) return;
 
-    var haut = rectNoeud.top - rectEnv.top + enveloppe.scrollTop - bulle.offsetHeight - 14;
-    if (haut < enveloppe.scrollTop) haut = rectNoeud.bottom - rectEnv.top + enveloppe.scrollTop + 14;
-    var gauche = rectNoeud.left - rectEnv.left + enveloppe.scrollLeft + rectNoeud.width / 2 - bulle.offsetWidth / 2;
-    bulle.style.top = haut + 'px';
-    bulle.style.left = gauche + 'px';
+    var MARGE = 14;
+    var largeurBulle = bulle.offsetWidth, hauteurBulle = bulle.offsetHeight;
+
+    function rectChevauchant(rect) {
+      var autres = document.querySelectorAll('.noeud-diagramme .noeud-forme, .noeud-diagramme .noeud-diamant');
+      for (var i = 0; i < autres.length; i++) {
+        if (autres[i].closest('.noeud-diagramme') === elementActif) continue;
+        var r = autres[i].getBoundingClientRect();
+        if (rect.left < r.right && rect.right > r.left && rect.top < r.bottom && rect.bottom > r.top) return r;
+      }
+      return null;
+    }
+    function chevaucheAutreNoeud(rect) { return rectChevauchant(rect) !== null; }
+
+    // Pousse la bulle latéralement au-delà de tout village qu'elle chevaucherait encore
+    // (ex. R ≥ MR ? est coincé entre AJUSTEMENT au-dessus et DÉPL. ENTIER juste à droite :
+    // la bulle doit sauter par-dessus ce dernier pour trouver de la place plus loin).
+    function pousserLateralement(gaucheDepart, centreHaut, sens) {
+      var gauche = gaucheDepart;
+      for (var essai = 0; essai < 6; essai++) {
+        var obstacle = rectChevauchant({ top: centreHaut, bottom: centreHaut + hauteurBulle, left: gauche, right: gauche + largeurBulle });
+        if (!obstacle) break;
+        gauche = sens > 0 ? obstacle.right + MARGE : obstacle.left - largeurBulle - MARGE;
+      }
+      return gauche;
+    }
+
+    var centreGauche = rectNoeud.left + rectNoeud.width / 2 - largeurBulle / 2;
+    var centreHaut = rectNoeud.top + rectNoeud.height / 2 - hauteurBulle / 2;
+
+    var candidats = [
+      { orientation: null, haut: rectNoeud.top - hauteurBulle - MARGE, gauche: centreGauche },
+      { orientation: 'bulle-en-dessous', haut: rectNoeud.bottom + MARGE, gauche: centreGauche },
+      { orientation: 'bulle-a-droite', haut: centreHaut, gauche: pousserLateralement(rectNoeud.right + MARGE, centreHaut, 1) },
+      { orientation: 'bulle-a-gauche', haut: centreHaut, gauche: pousserLateralement(rectNoeud.left - largeurBulle - MARGE, centreHaut, -1) }
+    ];
+
+    function dansLesLimites(cand) {
+      return cand.haut >= rectEnv.top && cand.gauche >= rectEnv.left && cand.gauche + largeurBulle <= rectEnv.right;
+    }
+    function libre(cand) {
+      return !chevaucheAutreNoeud({ top: cand.haut, bottom: cand.haut + hauteurBulle, left: cand.gauche, right: cand.gauche + largeurBulle });
+    }
+
+    var choisi = null;
+    for (var c = 0; c < candidats.length && !choisi; c++) {
+      if (dansLesLimites(candidats[c]) && libre(candidats[c])) choisi = candidats[c];
+    }
+    for (c = 0; c < candidats.length && !choisi; c++) {
+      if (dansLesLimites(candidats[c])) choisi = candidats[c];
+    }
+    if (!choisi) choisi = candidats[0];
+
+    if (choisi.orientation) bulle.classList.add(choisi.orientation);
+    bulle.style.top = (choisi.haut - rectEnv.top + enveloppe.scrollTop) + 'px';
+    bulle.style.left = (choisi.gauche - rectEnv.left + enveloppe.scrollLeft) + 'px';
   }
 
   function valeurQuotient() {
@@ -1796,6 +1883,7 @@
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
+    etat.resultatDepuisAV = false;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1832,6 +1920,7 @@
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
+    etat.resultatDepuisAV = false;
     afficherMessage('');
     rendreTout();
   });
