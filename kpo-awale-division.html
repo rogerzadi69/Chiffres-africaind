@@ -588,8 +588,8 @@
         <g>
           <!-- DEBUT -> MM -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97" data-vers="MM"></path>
-          <!-- MM -> MC_MR (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR"></path>
+          <!-- MM -> MC_MR (Oui) — seulement la toute première fois, avant le premier calcul principal -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR" data-condition="avant-calcul"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT"></path>
@@ -646,8 +646,9 @@
           <!-- CALC -> DEPOT -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,977 L470,1010" data-vers="DEPOT"></path>
 
-          <!-- DEPOT boucle en arrière vers MC_MR, tout à droite -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250" data-vers="MC_MR"></path>
+          <!-- DEPOT boucle en arrière vers MC_MR, tout à droite — seulement après qu'un calcul
+               principal a déjà eu lieu (jamais lors de la toute première évaluation de MC_MR) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250" data-vers="MC_MR" data-condition="apres-calcul"></path>
 
           <!-- RESULTAT -> CTN -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1177 L470,1197" data-vers="CTN"></path>
@@ -823,7 +824,10 @@
     qtDecimales: [],      // chiffres décimaux du Quotient, dans l'ordre (CTN)
     resteDecimal: 0,      // reste courant pendant la boucle CTN (nombre, plus un tableau de villages)
     attenteCTN: false,    // vrai quand le générateur est en pause, en attente d'une réponse Oui/Non à CTN
-    raisonFinDecimale: null  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
+    raisonFinDecimale: null,  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
+    calculEffectue: false  // vrai dès qu'un premier calcul principal (MC = MC − MR) a eu lieu —
+                           // distingue, sur le losange MC ≥ MR, la flèche d'entrée (depuis MM,
+                           // avant tout calcul) de la flèche de bouclage (depuis 1 pion au Quotient)
   };
 
   var LIBELLES_NOEUDS = {
@@ -1138,6 +1142,7 @@
       var mrVal = valeurMR(s);
       for (var k = 0; k < s.m; k++) s.dividende[lp2 + k] -= s.MR[k];
       var apresVal = valeurPrefixe(s);
+      s.calculEffectue = true; // dès ce premier calcul, la flèche de bouclage DEPOT -> MC_MR devient la bonne
       yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
 
       s.qtDigits[s.windowShift] = (s.qtDigits[s.windowShift] || 0) + 1;
@@ -1303,7 +1308,8 @@
       dejaCalcule: false, termine: false, generateur: null,
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0,
-      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null
+      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null,
+      calculEffectue: false
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1692,12 +1698,18 @@
       if (actif && !premierActif) premierActif = el;
     });
     // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée —
-    // sauf les deux flèches marquées .arc-sans-animation autour de MRG (celle qui vient de
-    // « Déjà dans la boucle ? » à gauche, et celle qui boucle depuis CONVERSION à droite) :
-    // ensemble, elles brouillaient le losange plutôt que d'aider à le repérer.
+    // sauf les flèches marquées .arc-sans-animation autour de MRG (celles qui créaient de la
+    // confusion en s'allumant toutes ensemble), et sauf, sur MC ≥ MR, celle des deux flèches
+    // d'entrée (depuis MM la toute première fois, depuis DEPOT ensuite) qui ne correspond pas
+    // à l'état réel : avant le premier calcul, seule la flèche MM -> MC_MR est la bonne ; après,
+    // seule la flèche de bouclage DEPOT -> MC_MR l'est.
     document.querySelectorAll('.arc-logigramme').forEach(function (el) {
+      var condition = el.dataset.condition;
+      var conditionRemplie = !condition
+        || (condition === 'avant-calcul' && !s.calculEffectue)
+        || (condition === 'apres-calcul' && s.calculEffectue);
       var versNoeudAnime = s.noeudActif !== null && el.dataset.vers === s.noeudActif
-        && !el.classList.contains('arc-sans-animation');
+        && !el.classList.contains('arc-sans-animation') && conditionRemplie;
       el.classList.toggle('actif', versNoeudAnime);
     });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
@@ -1770,6 +1782,7 @@
     etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
+    etat.calculEffectue = false;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1804,6 +1817,7 @@
     etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
+    etat.calculEffectue = false;
     afficherMessage('');
     rendreTout();
   });
