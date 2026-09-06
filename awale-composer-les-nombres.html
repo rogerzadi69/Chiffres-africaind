@@ -264,7 +264,7 @@
     transform: scale(0.6);
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .village:not(.vide) .valeur-glyphe { opacity: 1; transform: scale(1); }
+  .valeur-glyphe { opacity: 1; transform: scale(1); }
   .valeur-glyphe img { width: 11px; height: 11px; filter: brightness(0) invert(1); }
 
   .trou.plein-clignote { animation: plein 0.5s ease 2; }
@@ -570,7 +570,6 @@
       var idx = pos - 1;
       var compte = row[idx];
       var villageEl = document.querySelector('.trous[data-trous="' + r + '"] .village[data-pos="' + pos + '"]');
-      villageEl.classList.toggle('vide', compte === 0);
 
       var graines = villageEl.querySelector('.graines');
       graines.innerHTML = '';

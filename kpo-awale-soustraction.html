@@ -250,7 +250,7 @@
     padding: 3px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .village.avec-glyphe .badge-glyphes { opacity: 1; transform: scale(1); }
+  .badge-glyphes { opacity: 1; transform: scale(1); }
   .badge-glyphes img { width: 10px; height: 10px; filter: brightness(0) invert(1); }
   .village.attire.conversion .badge-glyphes { background: var(--alerte); }
 
@@ -661,17 +661,14 @@
           graines.appendChild(grain);
         }
 
-        // L'étiquette affiche le compte en chiffres africains (un ou deux glyphes).
+        // L'étiquette affiche toujours le compte en chiffres africains (zéro compris).
         badgeGlyphes.innerHTML = '';
-        if (compte > 0) {
-          if (compte <= 9) {
-            badgeGlyphes.appendChild(creerImg(compte));
-          } else {
-            badgeGlyphes.appendChild(creerImg(Math.floor(compte / 10)));
-            badgeGlyphes.appendChild(creerImg(compte % 10));
-          }
+        if (compte <= 9) {
+          badgeGlyphes.appendChild(creerImg(compte));
+        } else {
+          badgeGlyphes.appendChild(creerImg(Math.floor(compte / 10)));
+          badgeGlyphes.appendChild(creerImg(compte % 10));
         }
-        villageEl.classList.toggle('avec-glyphe', compte > 0);
       }
 
       // rangée éteinte (grisée) : rangée B une fois entièrement soustraite
