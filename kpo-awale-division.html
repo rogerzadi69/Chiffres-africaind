@@ -618,7 +618,7 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR" data-condition="avant-calcul"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT" data-condition="resultat-depuis-mm"></path>
           <text class="arc-etiquette" x="330" y="132">Non</text>
 
           <!-- MC_MR -> EB_SET (Oui) -->
@@ -632,7 +632,7 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,390 L140,415" data-vers="AJUSTEMENT"></path>
           <text class="arc-etiquette" x="154" y="407">Oui</text>
           <!-- AV -> RESULTAT (Non), longe une marge un peu plus interne -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150" data-vers="RESULTAT"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M75,350 L30,350 L30,1150 L382,1150" data-vers="RESULTAT" data-condition="resultat-depuis-av"></path>
           <text class="arc-etiquette" x="42" y="342">Non</text>
 
           <!-- AJUSTEMENT -> R_MR -->
@@ -855,8 +855,11 @@
     calculEffectue: false, // vrai dès qu'un premier calcul principal (MC = MC − MR) a eu lieu —
                            // distingue, sur le losange MC ≥ MR, la flèche d'entrée (depuis MM,
                            // avant tout calcul) de la flèche de bouclage (depuis 1 pion au Quotient)
-    avApresDeplEntier: false  // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
+    avApresDeplEntier: false, // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
                               // vient tout juste de MC_MR — distingue les deux flèches d'entrée d'AV
+    resultatDepuisAV: false  // vrai si on atteint RÉSULTAT depuis AV (plus de village disponible),
+                             // faux si c'est depuis MM (MR ne tient pas dans le Dividende d'emblée)
+                             // — distingue les deux flèches d'entrée de RÉSULTAT
   };
 
   var LIBELLES_NOEUDS = {
@@ -1128,6 +1131,7 @@
           var villageDispo = lp > 0;
           yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
           if (!villageDispo) {
+            s.resultatDepuisAV = true; // RÉSULTAT est atteint depuis AV, pas depuis MM
             yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici pour la partie entière.', {});
             s.termine = true;
             yield* genererDecimales(s);
@@ -1340,7 +1344,7 @@
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0,
       qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null,
-      calculEffectue: false, avApresDeplEntier: false
+      calculEffectue: false, avApresDeplEntier: false, resultatDepuisAV: false
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1728,7 +1732,9 @@
     'avant-calcul': function (s) { return !s.calculEffectue; },
     'apres-calcul': function (s) { return s.calculEffectue; },
     'avant-depl': function (s) { return !s.avApresDeplEntier; },
-    'apres-depl': function (s) { return s.avApresDeplEntier; }
+    'apres-depl': function (s) { return s.avApresDeplEntier; },
+    'resultat-depuis-mm': function (s) { return !s.resultatDepuisAV; },
+    'resultat-depuis-av': function (s) { return s.resultatDepuisAV; }
   };
 
   function rendreLogigramme(s) {
@@ -1877,6 +1883,7 @@
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
+    etat.resultatDepuisAV = false;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1913,6 +1920,7 @@
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
+    etat.resultatDepuisAV = false;
     afficherMessage('');
     rendreTout();
   });
