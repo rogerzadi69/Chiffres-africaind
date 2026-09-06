@@ -603,7 +603,7 @@
     <p class="demo-bandeau" id="demo-bandeau" hidden>Déroulement du logigramme en cours — indépendant du jeu, ta partie n'est pas modifiée.</p>
     <div class="logigramme-enveloppe">
       <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
-      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1500" xmlns="http://www.w3.org/2000/svg">
+      <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1600" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--encre-pale)"></path>
@@ -612,8 +612,8 @@
 
         <!-- ===== Arcs (dessinés avant les nœuds, pour passer dessous) ===== -->
         <g>
-          <!-- DEBUT -> MM -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97" data-vers="MM"></path>
+          <!-- DEBUT -> MM — seulement avant la toute première décimale -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97" data-vers="MM" data-condition="mm-depuis-debut"></path>
           <!-- MM -> MC_MR (Oui) — seulement la toute première fois, avant le premier calcul principal -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR" data-condition="avant-calcul"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
@@ -684,23 +684,23 @@
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1280 L470,1300" data-vers="FIN"></path>
           <text class="arc-etiquette" x="484" y="1295">Non</text>
 
-          <!-- CTN -> AJUSTEMENT_DEC (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,1240 L650,1232" data-vers="AJUSTEMENT_DEC"></path>
+          <!-- CTN -> DEPL_MC (Oui) : les 4 pas suivants s'enchaînent automatiquement, puis
+               une flèche reboucle sur MM — le même moteur rejoue alors sur le Reste. -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,1240 L650,1227" data-vers="DEPL_MC"></path>
           <text class="arc-etiquette" x="555" y="1224">Oui</text>
 
-          <!-- AJUSTEMENT_DEC -> CALC_DEC -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1264 L760,1300" data-vers="CALC_DEC"></path>
+          <!-- DEPL_MC -> AJUSTEMENT_MR -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1254 L760,1290" data-vers="AJUSTEMENT_MR"></path>
 
-          <!-- CALC_DEC -> DEPOT_DEC -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1354 L760,1390" data-vers="DEPOT_DEC"></path>
+          <!-- AJUSTEMENT_MR -> DEPL_DECIMAL -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1354 L760,1390" data-vers="DEPL_DECIMAL"></path>
 
-          <!-- DEPOT_DEC boucle vers CTN : encore une décimale ? -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M870,1417 L905,1417 L905,1240 L538,1240" data-vers="CTN"></path>
-          <text class="arc-etiquette" x="800" y="1210">encore ?</text>
+          <!-- DEPL_DECIMAL -> EB_N -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1444 L760,1480" data-vers="EB_N"></path>
 
-          <!-- DEPOT_DEC -> FIN, quand le Reste tombe exactement à zéro -->
-          <path class="arc-logigramme arc-decimal" marker-end="url(#fleche)" d="M650,1443 L470,1443 L470,1358" data-vers="FIN"></path>
-          <text class="arc-etiquette" x="490" y="1440">Reste = 0</text>
+          <!-- EB_N reboucle tout en haut sur MM, par la marge de droite — seulement une fois
+               qu'on est passé par cette préparation de décimale (jamais depuis DÉBUT) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M870,1507 L920,1507 L920,140 L535,140" data-vers="MM" data-condition="mm-depuis-ebn"></path>
         </g>
 
         <!-- ===== Nœuds ===== -->
@@ -787,21 +787,25 @@
           <text class="noeud-texte" x="470" y="1240">CTN ?</text>
         </g>
 
-        <g class="noeud-diagramme" data-noeud="AJUSTEMENT_DEC">
-          <rect class="noeud-forme" x="650" y="1200" width="220" height="64" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1223" font-size="12">AJUSTEMENT</text>
-          <text class="noeud-texte" x="760" y="1241" font-size="10" font-style="italic">Reste ×10, MR se réajuste</text>
+        <g class="noeud-diagramme" data-noeud="DEPL_MC">
+          <rect class="noeud-forme" x="650" y="1200" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1227" font-size="12">Dépl. MC</text>
         </g>
 
-        <g class="noeud-diagramme" data-noeud="CALC_DEC">
-          <rect class="noeud-forme" x="650" y="1300" width="220" height="54" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1327" font-size="12">MC = MC − MR</text>
+        <g class="noeud-diagramme" data-noeud="AJUSTEMENT_MR">
+          <rect class="noeud-forme" x="650" y="1290" width="220" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1313" font-size="12">AJUSTEMENT</text>
+          <text class="noeud-texte" x="760" y="1331" font-size="10" font-style="italic">MR se réajuste sur MC</text>
         </g>
 
-        <g class="noeud-diagramme" data-noeud="DEPOT_DEC">
+        <g class="noeud-diagramme" data-noeud="DEPL_DECIMAL">
           <rect class="noeud-forme" x="650" y="1390" width="220" height="54" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1411" font-size="11">Pion(s) au village</text>
-          <text class="noeud-texte" x="760" y="1427" font-size="11">décimal suivant</text>
+          <text class="noeud-texte" x="760" y="1417" font-size="12">Dépl. Décimal</text>
+        </g>
+
+        <g class="noeud-diagramme" data-noeud="EB_N">
+          <rect class="noeud-forme" x="650" y="1480" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1507" font-size="12">EB = Non</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="FIN">
@@ -848,26 +852,33 @@
     dividendeDepart: 0,   // valeur du Dividende au tout début, pour rappeler l'opération au résultat
     diviseurDepart: 0,
     demoActive: false,    // vrai pendant que la démonstration indépendante du logigramme tourne
-    qtDecimales: [],      // chiffres décimaux du Quotient, dans l'ordre (CTN)
-    resteDecimal: 0,      // reste courant pendant la boucle CTN (nombre, plus un tableau de villages)
+    qtDecimales: [],      // pions déposés par décimale (CTN), un compteur par village décimal
     attenteCTN: false,    // vrai quand le générateur est en pause, en attente d'une réponse Oui/Non à CTN
     raisonFinDecimale: null,  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
-    calculEffectue: false, // vrai dès qu'un premier calcul principal (MC = MC − MR) a eu lieu —
-                           // distingue, sur le losange MC ≥ MR, la flèche d'entrée (depuis MM,
-                           // avant tout calcul) de la flèche de bouclage (depuis 1 pion au Quotient)
+    calculEffectue: false, // vrai dès qu'un calcul principal (MC = MC − MR) a eu lieu DANS LA RONDE
+                           // en cours (remis à false à chaque passage par MM) — distingue, sur le
+                           // losange MC ≥ MR, la flèche d'entrée (depuis MM) de la flèche de
+                           // bouclage (depuis 1 pion au Quotient)
     avApresDeplEntier: false, // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
                               // vient tout juste de MC_MR — distingue les deux flèches d'entrée d'AV
-    resultatDepuisAV: false  // vrai si on atteint RÉSULTAT depuis AV (plus de village disponible),
+    resultatDepuisAV: false, // vrai si on atteint RÉSULTAT depuis AV (plus de village disponible),
                              // faux si c'est depuis MM (MR ne tient pas dans le Dividende d'emblée)
                              // — distingue les deux flèches d'entrée de RÉSULTAT
+    enPhaseDecimale: false, // vrai dès le premier CTN = Oui : le moteur rejoue alors sur le Reste
+                            // (decReste/decND), une copie indépendante, jamais sur le plateau réel
+    decReste: null,         // copie du Reste, décalée d'un village (× 10) à chaque décimale
+    decND: 0,               // largeur significative de decReste
+    decimalRound: 0,        // 0 = partie entière, 1 = 1ère décimale, 2 = 2e décimale…
+    windowShiftEntier: 0    // windowShift figé de la partie entière (s.windowShift sert ensuite
+                            // au décompte de chaque décimale, voir decalerVersLaGauche)
   };
 
   var LIBELLES_NOEUDS = {
     MM: 'MM', MC_MR: 'MC ≥ MR', EB_SET: 'EB', MRG: 'MRG', CONVERSION: 'Conversion',
     CALC: 'MC = MC − MR', DEPOT: '+1 au QT', AV: 'AV', AJUSTEMENT: 'Ajustement',
     R_MR: 'R ≥ MR', EB_Q: 'EB ?', DEPL_ENTIER: 'Dépl. Entier', RESULTAT: 'Résultat',
-    CTN: 'CTN ?', AJUSTEMENT_DEC: 'Ajustement (décimal)', CALC_DEC: 'MC = MC − MR (décimal)',
-    DEPOT_DEC: '+1 décimale au QT', FIN: 'Fin'
+    CTN: 'CTN ?', DEPL_MC: 'Dépl. MC', AJUSTEMENT_MR: 'Ajustement (MR)',
+    DEPL_DECIMAL: 'Dépl. Décimal', EB_N: 'EB = Non', FIN: 'Fin'
   };
 
   function creerImg(chiffre) {
@@ -1050,13 +1061,22 @@
   // sur la variable globale `etat`) : ainsi la démonstration indépendante du logigramme
   // peut rejouer exactement la même logique sur son propre état, sans jamais toucher
   // au plateau ni à la partie en cours du joueur.
-  function hautFenetre(s) { return s.nD - 1 - s.windowShift; }
-  function basFenetre(s) { return s.nD - s.m - s.windowShift; }
+  // Une fois la partie entière figée (plus aucun village disponible), le CTN prolonge la
+  // division sur le Reste : plutôt qu'un moteur séparé, on rejoue le même moteur sur une copie
+  // du Reste (s.decReste / s.decND), pour ne jamais toucher aux villages du plateau réel déjà
+  // réglés. dividendeActif/nDActif choisissent, à tout instant, sur quel tableau et quelle
+  // largeur significative les fonctions ci-dessous doivent travailler.
+  function dividendeActif(s) { return s.enPhaseDecimale ? s.decReste : s.dividende; }
+  function nDActif(s) { return s.enPhaseDecimale ? s.decND : s.nD; }
+
+  function hautFenetre(s) { return nDActif(s) - 1 - s.windowShift; }
+  function basFenetre(s) { return nDActif(s) - s.m - s.windowShift; }
 
   function valeurPrefixe(s) {
+    var arr = dividendeActif(s), nD = nDActif(s);
     var lp = basFenetre(s);
     var v = 0;
-    for (var p = s.nD - 1; p >= lp; p--) v = v * 10 + s.dividende[p];
+    for (var p = nD - 1; p >= lp; p--) v = v * 10 + arr[p];
     return v;
   }
 
@@ -1069,10 +1089,11 @@
   // Renvoie la position (puissance absolue) du village déficient le moins significatif de la fenêtre,
   // ou -1 si la fenêtre permet déjà le retrait, village par village.
   function trouverDeficient(s) {
+    var arr = dividendeActif(s);
     var lp = basFenetre(s);
     for (var i = 0; i < s.m; i++) {
       var p = lp + i;
-      if (s.dividende[p] < s.MR[i]) return p;
+      if (arr[p] < s.MR[i]) return p;
     }
     return -1;
   }
@@ -1080,18 +1101,39 @@
   // Cherche, à partir de p+1 vers la gauche (puissances croissantes), le premier village non vide,
   // puis fait descendre la conversion de proche en proche jusqu'au village p (qui reçoit dix pions).
   function convertirVers(s, p) {
+    var arr = dividendeActif(s);
     var q = p + 1;
-    while (q < MAX_VILLAGES && s.dividende[q] === 0) q++;
-    if (q >= MAX_VILLAGES) return null;
+    while (q < arr.length && arr[q] === 0) q++;
+    if (q >= arr.length) return null;
 
     var touches = [];
     for (var j = q; j > p; j--) {
-      s.dividende[j] -= 1;
-      s.dividende[j - 1] += 10;
+      arr[j] -= 1;
+      arr[j - 1] += 10;
       touches.push(j - 1);
     }
     touches.push(q);
     return touches;
+  }
+
+  // Dépl. MC : à la première décimale, le Reste entier (celui qu'on a sous la main à RÉSULTAT)
+  // devient la nouvelle base de travail ; ensuite, chaque décimale supplémentaire décale ce
+  // Reste d'un village vers la gauche (× 10 — on « descend un zéro », comme on le ferait en
+  // posant l'opération). Ceci ne touche jamais aux villages du plateau réel : une fois la
+  // partie entière figée, le calcul décimal se poursuit sur une copie indépendante du Reste.
+  function decalerVersLaGauche(s) {
+    if (!s.enPhaseDecimale) {
+      var reste = valeurTotale(dividendeActif(s));
+      s.enPhaseDecimale = true;
+      s.windowShiftEntier = s.windowShift; // gèle le décalage de la partie entière : les
+                                            // décimales réutilisent s.windowShift pour leur
+                                            // propre compte, sans jamais l'effacer
+      s.decReste = chiffresDepuisNombre(reste);
+      s.decND = Math.max(1, largeurSignificative(s.decReste));
+    }
+    s.decReste.unshift(0);
+    s.decND++;
+    s.windowShift = 0;
   }
 
   function animerVillages(r, positionsPuissance, classe, duree) {
@@ -1113,123 +1155,149 @@
   // avancer ce generateur jusqu'au prochain "fin de tour" (un depot, ou la fin de tout).
   // Il prend en paramètre l'état sur lequel rejouer (la partie réelle, ou l'état séparé
   // de la démonstration indépendante) : le moteur logique est le même dans les deux cas.
-  function* genererDivision(s) {
-    while (true) {
-      var R = valeurPrefixe(s), MRv = valeurMR(s);
-      var passe = (R >= MRv);
-      yield pas('MC_MR', 'MC ≥ MR ? ' + R.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe), { MC: R, MR: MRv });
-
-      if (passe) {
-        s.dejaCalcule = true;
-        yield pas('EB_SET', 'Entrée dans la boucle principale : EB = Oui.', {});
-      } else {
-        // Boucle AV / Ajustement / R≥MR : si R≥MR répond Non, on revient ici même,
-        // au losange AV, pas à MC≥MR — la fenêtre continue de s'élargir village par village.
-        s.avApresDeplEntier = false; // AV est atteint depuis MC_MR, pas encore depuis DÉPL. ENTIER
-        while (true) {
-          var lp = basFenetre(s);
-          var villageDispo = lp > 0;
-          yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
-          if (!villageDispo) {
-            s.resultatDepuisAV = true; // RÉSULTAT est atteint depuis AV, pas depuis MM
-            yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici pour la partie entière.', {});
-            s.termine = true;
-            yield* genererDecimales(s);
-            return;
-          }
-          var villagePuissance = lp - 1;
-          var villageDevientReserve = hautFenetre(s);
-          s.windowShift++;
-          yield pas('AJUSTEMENT', 'Ajustement : le village qui sort du cadre du MR devient EC (village en État de Conversion) — il reste dans le MC et sera converti à droite pour aider à former R.', { village: villagePuissance, ancienHaut: villageDevientReserve });
-
-          var R2 = valeurPrefixe(s);
-          var passe2 = (R2 >= MRv);
-          yield pas('R_MR', 'R ≥ MR (EC converti et compris dans R) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
-
-          if (!passe2) {
-            yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se décale quand même, un 0 implicite à cette position.', {});
-            s.avApresDeplEntier = true; // le prochain AV sera atteint depuis ce DÉPL. ENTIER, pas depuis MC_MR
-            continue;
-          }
-
-          yield pas('EB_Q', 'Es-tu déjà entré une fois dans la boucle principale ? → ' + texteOuiNon(s.dejaCalcule), {});
-          if (s.dejaCalcule) {
-            yield pas('DEPL_ENTIER', 'Déplacement Entier : le chiffre déjà posé au Quotient glisse d’un cran vers la gauche.', {});
-          }
-          break;
-        }
-      }
-
-      // Boucle interne MRG / Conversion, commune aux deux chemins ci-dessus.
-      while (true) {
-        var pDef = trouverDeficient(s);
-        yield pas('MRG', 'Même Rangement ? La fenêtre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
-        if (pDef === -1) break;
-        var touches = convertirVers(s, pDef);
-        if (touches === null) break;
-        yield pas('CONVERSION', 'Conversion : un pion emprunté plus à gauche devient dix pions pour le village en difficulté.', { touches: touches });
-      }
-
-      var lp2 = basFenetre(s);
-      var positionsFenetre = [];
-      for (var i = 0; i < s.m; i++) positionsFenetre.push(lp2 + i);
-      var avantVal = valeurPrefixe(s);
-      var mrVal = valeurMR(s);
-      for (var k = 0; k < s.m; k++) s.dividende[lp2 + k] -= s.MR[k];
-      var apresVal = valeurPrefixe(s);
-      s.calculEffectue = true; // dès ce premier calcul, la flèche de bouclage DEPOT -> MC_MR devient la bonne
-      yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
-
-      s.qtDigits[s.windowShift] = (s.qtDigits[s.windowShift] || 0) + 1;
-      yield pas('DEPOT', '1 pion déposé au Quotient, dans le village actif de la Rangée 3.', {});
-
-      yield { finDeTour: true };
-    }
-  }
-
-  // Prolonge la division au-delà du Reste entier, pour obtenir un Quotient décimal (CTN).
-  // Une fois le Dividende entièrement consommé, il n'y a plus de vrais villages à consulter :
-  // chaque cycle « descend un zéro » (le Reste ×10) et calcule une décimale de plus par simple
-  // arithmétique — MRG et Conversion n'ont plus de sens ici, un seul Reste suffit à tout porter.
-  // Le nœud CTN attend une réponse du joueur : le `yield` suivant reçoit cette réponse via
-  // `generateur.next(reponse)`, exactement comme le ferait une vraie question du logigramme.
+  //
+  // MM n'est plus un simple test préalable : c'est un vrai nœud du générateur, revisité à
+  // chaque « ronde » (la partie entière, puis chaque décimale after un CTN = Oui). Quand CTN
+  // répond Oui, Dépl. MC / Ajustement / Dépl. Décimal / EB = Non préparent la décimale suivante
+  // puis une flèche reboucle sur MM : le même moteur (MC ≥ MR, AV, AJUSTEMENT, R ≥ MR, MRG,
+  // CONVERSION, CALC, DEPOT) rejoue alors sur le Reste, exactement comme pour la partie entière —
+  // le calcul principal (MC = MC − MR) qui fait déposer un pion au Quotient ne se fait nulle
+  // part ailleurs.
   var MAX_DECIMALES = MAX_VILLAGES_DECIMALES;
-  function* genererDecimales(s) {
-    var reste = valeurTotale(s.dividende);
-    if (reste === 0) return; // déjà exact : rien à continuer
-    var MRv = valeurMR(s);
-    s.resteDecimal = reste;
-    s.qtDecimales = [];
+  function* genererDivision(s) {
+    rondes: while (true) {
+      s.calculEffectue = false; // remis à zéro à chaque ronde : la flèche de bouclage DEPOT ->
+                                 // MC_MR ne redevient « la bonne » qu'après un calcul dans CETTE
+                                 // ronde (entière ou décimale), jamais avant.
+      var nDcur = nDActif(s);
+      var mm = (nDcur >= s.m);
+      yield pas('MM', 'MM (Même Modèle) : nMC ≥ nMR ? ' + nDcur + ' ≥ ' + s.m + ' → ' + texteOuiNon(mm), {});
 
-    while (s.qtDecimales.length < MAX_DECIMALES) {
-      var continuer = yield pas('CTN', 'Veux-tu continuer l’opération pour obtenir un Quotient décimal (CTN) ? Reste actuel : ' + s.resteDecimal + '.', { reste: s.resteDecimal });
+      if (mm) {
+        boucleMC: while (true) {
+          var R = valeurPrefixe(s), MRv = valeurMR(s);
+          var passe = (R >= MRv);
+          yield pas('MC_MR', 'MC ≥ MR ? ' + R.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe), { MC: R, MR: MRv });
+
+          if (passe) {
+            s.dejaCalcule = true;
+            yield pas('EB_SET', 'Entrée dans la boucle principale : EB = Oui.', {});
+          } else {
+            // Boucle AV / Ajustement / R≥MR : si R≥MR répond Non, on revient ici même,
+            // au losange AV, pas à MC≥MR — la fenêtre continue de s'élargir village par village.
+            s.avApresDeplEntier = false; // AV est atteint depuis MC_MR, pas encore depuis DÉPL. ENTIER
+            while (true) {
+              var lp = basFenetre(s);
+              var villageDispo = lp > 0;
+              yield pas('AV', 'Y a-t-il un autre village à droite du MC en cours ? → ' + texteOuiNon(villageDispo), {});
+              if (!villageDispo) {
+                s.resultatDepuisAV = true; // RÉSULTAT est atteint depuis AV, pas depuis MM
+                yield pas('RESULTAT', 'Plus aucun village disponible : l’opération s’arrête ici pour cette ronde.', {});
+                break boucleMC;
+              }
+              var villagePuissance = lp - 1;
+              var villageDevientReserve = hautFenetre(s);
+              s.windowShift++;
+              yield pas('AJUSTEMENT', 'Ajustement : le village qui sort du cadre du MR devient EC (village en État de Conversion) — il reste dans le MC et sera converti à droite pour aider à former R.', { village: villagePuissance, ancienHaut: villageDevientReserve });
+
+              var R2 = valeurPrefixe(s);
+              var passe2 = (R2 >= MRv);
+              yield pas('R_MR', 'R ≥ MR (EC converti et compris dans R) ? ' + R2.toLocaleString('fr-FR') + ' ≥ ' + MRv.toLocaleString('fr-FR') + ' → ' + texteOuiNon(passe2), { R: R2, MR: MRv });
+
+              if (!passe2) {
+                yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se décale quand même, un 0 implicite à cette position.', {});
+                s.avApresDeplEntier = true; // le prochain AV sera atteint depuis ce DÉPL. ENTIER, pas depuis MC_MR
+                continue;
+              }
+
+              yield pas('EB_Q', 'Es-tu déjà entré une fois dans la boucle principale ? → ' + texteOuiNon(s.dejaCalcule), {});
+              if (s.dejaCalcule) {
+                yield pas('DEPL_ENTIER', 'Déplacement Entier : le chiffre déjà posé au Quotient glisse d’un cran vers la gauche.', {});
+              }
+              break;
+            }
+          }
+
+          // Boucle interne MRG / Conversion, commune aux deux chemins ci-dessus.
+          while (true) {
+            var pDef = trouverDeficient(s);
+            yield pas('MRG', 'Même Rangement ? La fenêtre permet-elle le retrait, village par village ? → ' + texteOuiNon(pDef === -1), {});
+            if (pDef === -1) break;
+            var touches = convertirVers(s, pDef);
+            if (touches === null) break;
+            yield pas('CONVERSION', 'Conversion : un pion emprunté plus à gauche devient dix pions pour le village en difficulté.', { touches: touches });
+          }
+
+          var lp2 = basFenetre(s);
+          var arr = dividendeActif(s);
+          var positionsFenetre = [];
+          for (var i = 0; i < s.m; i++) positionsFenetre.push(lp2 + i);
+          var avantVal = valeurPrefixe(s);
+          var mrVal = valeurMR(s);
+          for (var k = 0; k < s.m; k++) arr[lp2 + k] -= s.MR[k];
+          var apresVal = valeurPrefixe(s);
+          s.calculEffectue = true; // dès ce premier calcul, la flèche de bouclage DEPOT -> MC_MR devient la bonne
+          yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
+
+          if (s.enPhaseDecimale) {
+            s.qtDecimales[s.decimalRound - 1] = (s.qtDecimales[s.decimalRound - 1] || 0) + 1;
+            yield pas('DEPOT', '1 pion déposé dans le village décimal n°' + s.decimalRound + ' du Quotient.', {});
+          } else {
+            s.qtDigits[s.windowShift] = (s.qtDigits[s.windowShift] || 0) + 1;
+            yield pas('DEPOT', '1 pion déposé au Quotient, dans le village actif de la Rangée 3.', {});
+          }
+
+          yield { finDeTour: true };
+        }
+      } else if (!s.enPhaseDecimale) {
+        // MR ne tient pas d'emblée dans le Dividende : Quotient nul, rien d'autre à faire.
+        yield pas('RESULTAT', 'nMR > nMC : MR ne tient pas dans le nombre de villages disponibles, Quotient nul d’emblée.', {});
+        s.termine = true;
+        return;
+      }
+      // Si mm est Non alors qu'on est déjà en phase décimale : MR ne tient pas encore dans ce
+      // Reste étendu (la décimale vaut alors implicitement 0, comme un DÉPL. ENTIER) — on
+      // retombe directement au point de contrôle ci-dessous, sans repasser par la boucle MC ≥ MR.
+
+      // ---- Point de contrôle après une ronde (entière ou décimale) : Reste, puis CTN ----
+      // termine passe à vrai dès ce point (qu'on continue ensuite en décimale ou non) : le
+      // plateau réel ne se joue plus qu'au clic sur Diviseur pendant la partie entière, jamais
+      // pendant la boucle CTN, qui s'enchaîne toute seule via les boutons Oui/Non.
+      s.termine = true;
+      var reste = valeurTotale(dividendeActif(s));
+      if (reste === 0) {
+        if (s.enPhaseDecimale) {
+          yield pas('FIN', 'Reste = 0 : la division décimale est exacte, elle s’arrête ici.', { raison: 'exact' });
+        }
+        return;
+      }
+      if (s.enPhaseDecimale && s.decimalRound >= MAX_DECIMALES) {
+        yield pas('FIN', 'Limite de ' + MAX_DECIMALES + ' décimales atteinte : on s’arrête ici (le calcul pourrait sinon continuer indéfiniment).', { raison: 'plafond' });
+        return;
+      }
+      var continuer = yield pas('CTN', 'Veux-tu continuer l’opération pour obtenir un Quotient décimal (CTN) ? Reste actuel : ' + reste.toLocaleString('fr-FR') + '.', { reste: reste });
       if (!continuer) {
         yield pas('FIN', 'Arrêt à la demande : le Quotient garde les décimales déjà trouvées.', { raison: 'refus' });
         return;
       }
 
-      var etendu = s.resteDecimal * 10;
-      yield pas('AJUSTEMENT_DEC', 'Ajustement : le Reste se décale d’un village vers la gauche (× 10) → ' + etendu.toLocaleString('fr-FR') + ' ; MR se réajuste.', { etendu: etendu });
-
-      var chiffre = Math.floor(etendu / MRv);
-      var apres = etendu - chiffre * MRv;
-      yield pas('CALC_DEC', 'Calcul : MC = MC − MR (' + etendu.toLocaleString('fr-FR') + ' − ' + (chiffre * MRv).toLocaleString('fr-FR') + ' = ' + apres.toLocaleString('fr-FR') + ').', {});
-
-      s.qtDecimales.push(chiffre);
-      s.resteDecimal = apres;
-      yield pas('DEPOT_DEC', chiffre + ' pion(s) déposé(s) dans le village décimal n°' + s.qtDecimales.length + ' du Quotient.', { chiffre: chiffre, position: s.qtDecimales.length });
-
-      if (apres === 0) {
-        yield pas('FIN', 'Reste = 0 : la division décimale est exacte, elle s’arrête ici.', { raison: 'exact' });
-        return;
-      }
+      // CTN = Oui : ces quatre opérations s'enchaînent automatiquement, puis une flèche reboucle sur MM.
+      yield pas('DEPL_MC', 'Dépl. MC : le Modèle Correspondant (le Reste) se décale d’un village vers la gauche (× 10).', {});
+      decalerVersLaGauche(s);
+      yield pas('AJUSTEMENT_MR', 'Ajustement : le Modèle de Référence (MR) se réajuste sur le nouveau MC, dans la Rangée 1.', {});
+      s.decimalRound = (s.decimalRound || 0) + 1;
+      s.qtDecimales[s.decimalRound - 1] = 0;
+      yield pas('DEPL_DECIMAL', 'Dépl. Décimal : le prochain dépôt du Quotient se fera dans le village décimal n°' + s.decimalRound + '.', {});
+      s.dejaCalcule = false;
+      yield pas('EB_N', 'EB = Non : rien n’a encore été calculé pour cette nouvelle décimale.', {});
+      continue rondes;
     }
-    yield pas('FIN', 'Limite de ' + MAX_DECIMALES + ' décimales atteinte : on s’arrête ici (le calcul pourrait sinon continuer indéfiniment).', { raison: 'plafond' });
   }
   // Chaque nœud garde l'écran un temps différent : les conversions et les ajustements,
   // les plus difficiles à suivre, restent affichés bien plus longtemps que les autres.
   var DUREES_PAS = {
     AJUSTEMENT: 2400,
+    AJUSTEMENT_MR: 2000,
     CONVERSION: 2200,
     CALC: 1700,
     DEPOT: 1500
@@ -1241,6 +1309,13 @@
   }
 
   function declencherAnimationPlateau(p) {
+    if (etat.enPhaseDecimale) {
+      // Une fois la partie entière figée, AJUSTEMENT / MRG / CONVERSION / CALC rejouent sur
+      // une copie du Reste (voir dividendeActif) : ils ne pilotent plus aucun pion réel. Seul
+      // le dépôt du Quotient reste visible, dans le village décimal actif.
+      if (p.noeud === 'DEPOT') flashClasseDecimale(etat.decimalRound, 'depot-anime', 1200);
+      return;
+    }
     if (p.noeud === 'AJUSTEMENT') {
       flashClasse(0, p.vars.village + 1, 'emprunt-anime', 1400);
       // Le village qui sort de la fenêtre passe en réserve : c'est le village
@@ -1255,8 +1330,6 @@
       animerVillages(0, p.vars.positions, 'retrait-anime', 1200);
     } else if (p.noeud === 'DEPOT') {
       flashClasse(2, 1, 'depot-anime', 1200);
-    } else if (p.noeud === 'DEPOT_DEC') {
-      flashClasseDecimale(p.vars.position, 'depot-anime', 1200);
     }
   }
 
@@ -1275,6 +1348,13 @@
     if (p.finDeTour) {
       etat.enAnimation = false;
       rendreTout();
+      if (etat.enPhaseDecimale) {
+        // Une fois CTN répondu Oui, toute la décimale s'enchaîne toute seule (il n'y a plus de
+        // village du Diviseur sur lequel cliquer) : un dépôt peut se répéter plusieurs fois dans
+        // le même village décimal avant que MC ≥ MR ne réponde enfin Non.
+        etat.enAnimation = true;
+        setTimeout(function () { traiterResultatGenerateur(etat.generateur.next()); }, dureePas('DEPOT'));
+      }
       return;
     }
     if (p.noeud === 'CTN') {
@@ -1343,8 +1423,9 @@
       dejaCalcule: false, termine: false, generateur: null,
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0,
-      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null,
-      calculEffectue: false, avApresDeplEntier: false, resultatDepuisAV: false
+      qtDecimales: [], attenteCTN: false, raisonFinDecimale: null,
+      calculEffectue: false, avApresDeplEntier: false, resultatDepuisAV: false,
+      enPhaseDecimale: false, decReste: null, decND: 0, decimalRound: 0, windowShiftEntier: 0
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1380,22 +1461,28 @@
     etat.demoActive = true;
     rendreTout(); // fige visuellement le plateau réel (plus aucun village cliquable)
     etatDemo = creerEtatDemo(dividendeArr, diviseurArr);
-
-    var mm = etatDemo.nD >= etatDemo.m;
-    etatDemo.journal.push(pas('MM', 'MM (Même Modèle) : nMC ≥ nMR ? ' + etatDemo.nD + ' ≥ ' + etatDemo.m + ' → ' + texteOuiNon(mm), {}));
+    etatDemo.generateur = genererDivision(etatDemo);
 
     document.getElementById('btn-demo-demarrer').hidden = true;
     document.getElementById('btn-demo-quitter').hidden = false;
     document.getElementById('demo-bandeau').hidden = false;
 
-    if (mm) {
-      etatDemo.generateur = genererDivision(etatDemo);
-      etatDemo.noeudActif = 'MM';
-      document.getElementById('btn-demo-suivant').hidden = false;
-    } else {
-      etatDemo.journal.push(pas('RESULTAT', 'nMR > nMC : MR ne tient pas dans le nombre de villages disponibles, Quotient nul d’emblée.', {}));
-      etatDemo.noeudActif = 'RESULTAT';
+    // MM est désormais un vrai premier pas du générateur (revisité à chaque décimale) : on le
+    // déroule tout de suite, sans attendre de clic, comme avant. S'il échoue d'emblée, RÉSULTAT
+    // s'enchaîne aussitôt lui aussi (le générateur s'arrête juste après) — on l'affiche tout de
+    // suite également, pour ne pas exiger un clic « dans le vide ».
+    var resultat = etatDemo.generateur.next();
+    var p = resultat.value;
+    etatDemo.noeudActif = p.noeud;
+    etatDemo.journal.push(p);
+    if (etatDemo.nD < etatDemo.m) {
+      resultat = etatDemo.generateur.next();
+      p = resultat.value;
+      etatDemo.noeudActif = p.noeud;
+      etatDemo.journal.push(p);
       document.getElementById('btn-demo-suivant').hidden = true;
+    } else {
+      document.getElementById('btn-demo-suivant').hidden = false;
     }
 
     var enveloppeDemo = document.querySelector('.logigramme-enveloppe');
@@ -1496,7 +1583,10 @@
   }
 
   function quotientPuissance(p) {
-    var d = etat.windowShift - p;
+    // Une fois en phase décimale, s.windowShift sert au décompte de la décimale en cours (voir
+    // decalerVersLaGauche) : la partie entière du Quotient reste figée sur windowShiftEntier.
+    var decalageEntier = etat.enPhaseDecimale ? etat.windowShiftEntier : etat.windowShift;
+    var d = decalageEntier - p;
     if (d < 0) return 0;
     return etat.qtDigits[d] || 0;
   }
@@ -1734,7 +1824,9 @@
     'avant-depl': function (s) { return !s.avApresDeplEntier; },
     'apres-depl': function (s) { return s.avApresDeplEntier; },
     'resultat-depuis-mm': function (s) { return !s.resultatDepuisAV; },
-    'resultat-depuis-av': function (s) { return s.resultatDepuisAV; }
+    'resultat-depuis-av': function (s) { return s.resultatDepuisAV; },
+    'mm-depuis-debut': function (s) { return !s.enPhaseDecimale; },
+    'mm-depuis-ebn': function (s) { return s.enPhaseDecimale; }
   };
 
   function rendreLogigramme(s) {
@@ -1848,8 +1940,9 @@
   }
 
   function valeurQuotient() {
+    var decalageEntier = etat.enPhaseDecimale ? etat.windowShiftEntier : etat.windowShift;
     var v = 0;
-    for (var p = 0; p <= etat.windowShift; p++) v = v * 10 + (etat.qtDigits[p] || 0);
+    for (var p = 0; p <= decalageEntier; p++) v = v * 10 + (etat.qtDigits[p] || 0);
     return v;
   }
 
@@ -1878,12 +1971,16 @@
     etat.dividendeDepart = valeurTotale(etat.dividende);
     etat.diviseurDepart = valeurTotale(etat.diviseur);
     etat.qtDecimales = [];
-    etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
     etat.resultatDepuisAV = false;
+    etat.enPhaseDecimale = false;
+    etat.decReste = null;
+    etat.decND = 0;
+    etat.decimalRound = 0;
+    etat.windowShiftEntier = 0;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1915,12 +2012,16 @@
     etat.dividendeDepart = 0;
     etat.diviseurDepart = 0;
     etat.qtDecimales = [];
-    etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
     etat.calculEffectue = false;
     etat.avApresDeplEntier = false;
     etat.resultatDepuisAV = false;
+    etat.enPhaseDecimale = false;
+    etat.decReste = null;
+    etat.decND = 0;
+    etat.decimalRound = 0;
+    etat.windowShiftEntier = 0;
     afficherMessage('');
     rendreTout();
   });
