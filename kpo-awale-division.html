@@ -386,8 +386,26 @@
     color: var(--terre); background: var(--papier-fonce); border: 1.5px dashed var(--terre);
     border-radius: 12px; padding: 7px 14px; max-width: 640px; margin: 0 auto 14px;
   }
+  /* La barre de contrôle (Suivant, CTN, zoom) reste collée en haut de l'écran pendant qu'on
+     défile dans le schéma, qui peut être bien plus grand que la fenêtre : sans ça, il faudrait
+     remonter tout en haut de la page à chaque clic pour retrouver le bouton « Suivant ». */
+  .barre-logigramme-fixe {
+    position: sticky; top: 0; z-index: 30; background: var(--papier);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 12px 10px 10px; margin: 0 0 14px; border-bottom: 1.5px solid var(--encre-pale);
+  }
+  .barre-logigramme-fixe .controles-phase { margin-top: 0; }
+  .zoom-logigramme { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--encre-douce); }
+  .btn-zoom {
+    width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1.5px solid var(--encre);
+    background: var(--blanc); color: var(--encre); font-size: 17px; font-weight: bold;
+    line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .btn-zoom:hover:not(:disabled) { background: var(--papier-fonce); }
+  .btn-zoom:disabled { opacity: 0.4; cursor: default; }
+  #zoom-valeur { min-width: 44px; text-align: center; font-weight: bold; color: var(--encre); }
   .logigramme-enveloppe { overflow-x: auto; background: var(--blanc); border: 1.5px solid var(--encre); border-radius: 18px; padding: 14px; }
-  .logigramme-svg { display: block; margin: 0 auto; min-width: 760px; }
+  .logigramme-svg { display: block; margin: 0 auto; }
   .noeud-forme, .noeud-diamant {
     fill: var(--papier); stroke: var(--encre); stroke-width: 2.5;
     transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease;
@@ -593,14 +611,22 @@
     <h2>Le logigramme de la division kpo-awalé</h2>
     <p class="logigramme-intro">Le même raisonnement, vu comme un schéma — mais indépendant du jeu&nbsp;: jouer sur le plateau n'active plus ce schéma.</p>
     <p class="logigramme-intro">Clique sur « Démarrer le logigramme » pour dérouler pas à pas le raisonnement de <strong>ta</strong> division (celle que tu as composée), à ton propre rythme&nbsp;: un seul nœud s'allume à chaque clic sur « Suivant ».</p>
-    <div class="controles-phase">
-      <button class="btn-avancer" id="btn-demo-demarrer">▶ Démarrer le logigramme</button>
-      <button class="btn-avancer" id="btn-demo-suivant" hidden>Suivant →</button>
-      <button class="btn-avancer" id="btn-demo-ctn-oui" hidden>Oui, continuer →</button>
-      <button class="btn-recommencer" id="btn-demo-ctn-non" hidden>Non, arrêter ici</button>
-      <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter le logigramme</button>
+    <div class="barre-logigramme-fixe">
+      <div class="controles-phase">
+        <button class="btn-avancer" id="btn-demo-demarrer">▶ Démarrer le logigramme</button>
+        <button class="btn-avancer" id="btn-demo-suivant" hidden>Suivant →</button>
+        <button class="btn-avancer" id="btn-demo-ctn-oui" hidden>Oui, continuer →</button>
+        <button class="btn-recommencer" id="btn-demo-ctn-non" hidden>Non, arrêter ici</button>
+        <button class="btn-recommencer" id="btn-demo-quitter" hidden>■ Quitter le logigramme</button>
+      </div>
+      <p class="demo-bandeau" id="demo-bandeau" hidden>Déroulement du logigramme en cours — indépendant du jeu, ta partie n'est pas modifiée.</p>
+      <div class="zoom-logigramme">
+        <span>Taille du schéma&nbsp;:</span>
+        <button type="button" class="btn-zoom" id="btn-zoom-moins" aria-label="Réduire le schéma">−</button>
+        <span id="zoom-valeur">100&nbsp;%</span>
+        <button type="button" class="btn-zoom" id="btn-zoom-plus" aria-label="Agrandir le schéma">+</button>
+      </div>
     </div>
-    <p class="demo-bandeau" id="demo-bandeau" hidden>Déroulement du logigramme en cours — indépendant du jeu, ta partie n'est pas modifiée.</p>
     <div class="logigramme-enveloppe">
       <div class="bulle-logigramme" id="bulle-logigramme" hidden></div>
       <svg class="logigramme-svg" id="logigramme-svg" viewBox="0 0 940 1600" xmlns="http://www.w3.org/2000/svg">
@@ -685,22 +711,23 @@
           <text class="arc-etiquette" x="484" y="1295">Non</text>
 
           <!-- CTN -> DEPL_MC (Oui) : les 4 pas suivants s'enchaînent automatiquement, puis
-               une flèche reboucle sur MM — le même moteur rejoue alors sur le Reste. -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,1240 L650,1227" data-vers="DEPL_MC"></path>
-          <text class="arc-etiquette" x="555" y="1224">Oui</text>
+               une flèche reboucle sur MM — le même moteur rejoue alors sur le Reste. Dépl. MC
+               est aligné à la même hauteur que CTN, pour une flèche bien horizontale. -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,1240 L650,1240" data-vers="DEPL_MC"></path>
+          <text class="arc-etiquette" x="555" y="1233">Oui</text>
 
           <!-- DEPL_MC -> AJUSTEMENT_MR -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1254 L760,1290" data-vers="AJUSTEMENT_MR"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1267 L760,1303" data-vers="AJUSTEMENT_MR"></path>
 
           <!-- AJUSTEMENT_MR -> DEPL_DECIMAL -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1354 L760,1390" data-vers="DEPL_DECIMAL"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1367 L760,1403" data-vers="DEPL_DECIMAL"></path>
 
           <!-- DEPL_DECIMAL -> EB_N -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1444 L760,1480" data-vers="EB_N"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,1457 L760,1493" data-vers="EB_N"></path>
 
           <!-- EB_N reboucle tout en haut sur MM, par la marge de droite — seulement une fois
                qu'on est passé par cette préparation de décimale (jamais depuis DÉBUT) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M870,1507 L920,1507 L920,140 L535,140" data-vers="MM" data-condition="mm-depuis-ebn"></path>
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M870,1520 L920,1520 L920,140 L535,140" data-vers="MM" data-condition="mm-depuis-ebn"></path>
         </g>
 
         <!-- ===== Nœuds ===== -->
@@ -788,24 +815,24 @@
         </g>
 
         <g class="noeud-diagramme" data-noeud="DEPL_MC">
-          <rect class="noeud-forme" x="650" y="1200" width="220" height="54" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1227" font-size="12">Dépl. MC</text>
+          <rect class="noeud-forme" x="650" y="1213" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1240" font-size="12">Dépl. MC</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="AJUSTEMENT_MR">
-          <rect class="noeud-forme" x="650" y="1290" width="220" height="64" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1313" font-size="12">AJUSTEMENT</text>
-          <text class="noeud-texte" x="760" y="1331" font-size="10" font-style="italic">MR se réajuste sur MC</text>
+          <rect class="noeud-forme" x="650" y="1303" width="220" height="64" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1326" font-size="12">AJUSTEMENT</text>
+          <text class="noeud-texte" x="760" y="1344" font-size="10" font-style="italic">MR se réajuste sur MC</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="DEPL_DECIMAL">
-          <rect class="noeud-forme" x="650" y="1390" width="220" height="54" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1417" font-size="12">Dépl. Décimal</text>
+          <rect class="noeud-forme" x="650" y="1403" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1430" font-size="12">Dépl. Décimal</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="EB_N">
-          <rect class="noeud-forme" x="650" y="1480" width="220" height="54" rx="13"></rect>
-          <text class="noeud-texte" x="760" y="1507" font-size="12">EB = Non</text>
+          <rect class="noeud-forme" x="650" y="1493" width="220" height="54" rx="13"></rect>
+          <text class="noeud-texte" x="760" y="1520" font-size="12">EB = Non</text>
         </g>
 
         <g class="noeud-diagramme" data-noeud="FIN">
@@ -1559,6 +1586,26 @@
   document.getElementById('btn-demo-ctn-non').addEventListener('click', function () { repondreCTNDemo(false); });
   document.getElementById('btn-demo-quitter').addEventListener('click', quitterDemo);
 
+  // ---- Zoom du schéma : un simple pourcentage de largeur (l'aspect du viewBox suit tout
+  // seul), pour choisir entre voir tout le logigramme d'un coup (réduit) ou lire le détail
+  // d'une étape (agrandi), plutôt que de subir la seule taille fixée par la page.
+  var ZOOM_MIN = 40, ZOOM_MAX = 150, ZOOM_PAS = 10;
+  var zoomLogigramme = 100;
+  function appliquerZoomLogigramme() {
+    document.getElementById('logigramme-svg').style.width = zoomLogigramme + '%';
+    document.getElementById('zoom-valeur').textContent = zoomLogigramme + ' %';
+    document.getElementById('btn-zoom-moins').disabled = zoomLogigramme <= ZOOM_MIN;
+    document.getElementById('btn-zoom-plus').disabled = zoomLogigramme >= ZOOM_MAX;
+  }
+  document.getElementById('btn-zoom-moins').addEventListener('click', function () {
+    zoomLogigramme = Math.max(ZOOM_MIN, zoomLogigramme - ZOOM_PAS);
+    appliquerZoomLogigramme();
+  });
+  document.getElementById('btn-zoom-plus').addEventListener('click', function () {
+    zoomLogigramme = Math.min(ZOOM_MAX, zoomLogigramme + ZOOM_PAS);
+    appliquerZoomLogigramme();
+  });
+  appliquerZoomLogigramme();
 
   function onPitClick(r, pos) {
     var idx = pos - 1;
