@@ -588,8 +588,8 @@
         <g>
           <!-- DEBUT -> MM -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,77 L470,97" data-vers="MM"></path>
-          <!-- MM -> MC_MR (Oui) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR"></path>
+          <!-- MM -> MC_MR (Oui) — seulement la toute première fois, avant le premier calcul principal -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,180 L470,207" data-vers="MC_MR" data-condition="avant-calcul"></path>
           <text class="arc-etiquette" x="484" y="197">Oui</text>
           <!-- MM -> RESULTAT (Non), longe la marge gauche (voie la plus externe) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,140 L15,140 L15,1150 L382,1150" data-vers="RESULTAT"></path>
@@ -598,8 +598,8 @@
           <!-- MC_MR -> EB_SET (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,290 L470,320" data-vers="EB_SET"></path>
           <text class="arc-etiquette" x="484" y="310">Oui</text>
-          <!-- MC_MR -> AV (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,250 L140,250 L140,307" data-vers="AV"></path>
+          <!-- MC_MR -> AV (Non) — seulement quand on vient d'y entrer, pas encore passé par DÉPL. ENTIER -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M405,250 L140,250 L140,307" data-vers="AV" data-condition="avant-depl"></path>
           <text class="arc-etiquette" x="230" y="243">Non</text>
 
           <!-- AV -> AJUSTEMENT (Oui) -->
@@ -618,8 +618,9 @@
           <!-- R_MR -> DEPL_ENTIER_B (Non) : petit rectangle serré contre le losange, bien avant la colonne centrale -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,550 L227,550" data-vers="DEPL_ENTIER"></path>
           <text class="arc-etiquette" x="212" y="542">Non</text>
-          <!-- DEPL_ENTIER_B revient au losange AV, tout entier avant la ligne centrale EB->MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M315,523 L315,350 L207,350" data-vers="AV"></path>
+          <!-- DEPL_ENTIER_B revient au losange AV, tout entier avant la ligne centrale EB->MRG —
+               seulement quand ce retour a réellement eu lieu -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M315,523 L315,350 L207,350" data-vers="AV" data-condition="apres-depl"></path>
 
           <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,690 L140,720" data-vers="DEPL_ENTIER"></path>
@@ -646,8 +647,9 @@
           <!-- CALC -> DEPOT -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,977 L470,1010" data-vers="DEPOT"></path>
 
-          <!-- DEPOT boucle en arrière vers MC_MR, tout à droite -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250" data-vers="MC_MR"></path>
+          <!-- DEPOT boucle en arrière vers MC_MR, tout à droite — seulement après qu'un calcul
+               principal a déjà eu lieu (jamais lors de la toute première évaluation de MC_MR) -->
+          <path class="arc-logigramme" marker-end="url(#fleche)" d="M570,1040 L850,1040 L850,250 L538,250" data-vers="MC_MR" data-condition="apres-calcul"></path>
 
           <!-- RESULTAT -> CTN -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,1177 L470,1197" data-vers="CTN"></path>
@@ -823,7 +825,12 @@
     qtDecimales: [],      // chiffres décimaux du Quotient, dans l'ordre (CTN)
     resteDecimal: 0,      // reste courant pendant la boucle CTN (nombre, plus un tableau de villages)
     attenteCTN: false,    // vrai quand le générateur est en pause, en attente d'une réponse Oui/Non à CTN
-    raisonFinDecimale: null  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
+    raisonFinDecimale: null,  // 'exact' | 'refus' | 'plafond', pour le message final une fois le CTN terminé
+    calculEffectue: false, // vrai dès qu'un premier calcul principal (MC = MC − MR) a eu lieu —
+                           // distingue, sur le losange MC ≥ MR, la flèche d'entrée (depuis MM,
+                           // avant tout calcul) de la flèche de bouclage (depuis 1 pion au Quotient)
+    avApresDeplEntier: false  // vrai si l'AV en cours vient d'un DÉPL. ENTIER (R < MR), faux s'il
+                              // vient tout juste de MC_MR — distingue les deux flèches d'entrée d'AV
   };
 
   var LIBELLES_NOEUDS = {
@@ -1089,6 +1096,7 @@
       } else {
         // Boucle AV / Ajustement / R≥MR : si R≥MR répond Non, on revient ici même,
         // au losange AV, pas à MC≥MR — la fenêtre continue de s'élargir village par village.
+        s.avApresDeplEntier = false; // AV est atteint depuis MC_MR, pas encore depuis DÉPL. ENTIER
         while (true) {
           var lp = basFenetre(s);
           var villageDispo = lp > 0;
@@ -1110,6 +1118,7 @@
 
           if (!passe2) {
             yield pas('DEPL_ENTIER', 'Toujours pas assez : le Quotient se décale quand même, un 0 implicite à cette position.', {});
+            s.avApresDeplEntier = true; // le prochain AV sera atteint depuis ce DÉPL. ENTIER, pas depuis MC_MR
             continue;
           }
 
@@ -1138,6 +1147,7 @@
       var mrVal = valeurMR(s);
       for (var k = 0; k < s.m; k++) s.dividende[lp2 + k] -= s.MR[k];
       var apresVal = valeurPrefixe(s);
+      s.calculEffectue = true; // dès ce premier calcul, la flèche de bouclage DEPOT -> MC_MR devient la bonne
       yield pas('CALC', 'Calcul : MC = MC − MR (' + avantVal.toLocaleString('fr-FR') + ' − ' + mrVal.toLocaleString('fr-FR') + ' = ' + apresVal.toLocaleString('fr-FR') + ').', { positions: positionsFenetre });
 
       s.qtDigits[s.windowShift] = (s.qtDigits[s.windowShift] || 0) + 1;
@@ -1303,7 +1313,8 @@
       dejaCalcule: false, termine: false, generateur: null,
       journal: [], noeudActif: null, dernierNoeudDefile: null,
       dividendeDepart: 0, diviseurDepart: 0,
-      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null
+      qtDecimales: [], resteDecimal: 0, attenteCTN: false, raisonFinDecimale: null,
+      calculEffectue: false, avApresDeplEntier: false
     };
     s.nD = largeurSignificative(s.dividende);
     s.m = largeurSignificative(s.diviseur);
@@ -1684,6 +1695,16 @@
   // Un seul schéma SVG existe sur la page : il reflète soit la partie réelle (s = etat),
   // soit la démonstration indépendante (s = etatDemo), jamais les deux à la fois — la partie
   // et la démo se bloquent mutuellement pendant que l'une des deux tourne (voir demoActive).
+  // Certains nœuds ont deux flèches d'entrée possibles, mais une seule est réellement empruntée
+  // à un instant donné — cette table dit, pour chaque data-condition posée dans le SVG, si elle
+  // correspond à l'état courant (voir calculEffectue et avApresDeplEntier dans le générateur).
+  var CONDITIONS_ARCS = {
+    'avant-calcul': function (s) { return !s.calculEffectue; },
+    'apres-calcul': function (s) { return s.calculEffectue; },
+    'avant-depl': function (s) { return !s.avApresDeplEntier; },
+    'apres-depl': function (s) { return s.avApresDeplEntier; }
+  };
+
   function rendreLogigramme(s) {
     var premierActif = null;
     document.querySelectorAll('.noeud-diagramme').forEach(function (el) {
@@ -1692,12 +1713,15 @@
       if (actif && !premierActif) premierActif = el;
     });
     // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée —
-    // sauf les deux flèches marquées .arc-sans-animation autour de MRG (celle qui vient de
-    // « Déjà dans la boucle ? » à gauche, et celle qui boucle depuis CONVERSION à droite) :
-    // ensemble, elles brouillaient le losange plutôt que d'aider à le repérer.
+    // sauf les flèches marquées .arc-sans-animation autour de MRG (celles qui créaient de la
+    // confusion en s'allumant toutes ensemble), et sauf, pour les nœuds à deux entrées possibles
+    // (MC ≥ MR, AV), celle des deux flèches qui ne correspond pas au chemin réellement emprunté :
+    // CONDITIONS_ARCS associe chaque data-condition à la fonction qui dit si elle est remplie.
     document.querySelectorAll('.arc-logigramme').forEach(function (el) {
+      var condition = el.dataset.condition;
+      var conditionRemplie = !condition || (CONDITIONS_ARCS[condition] && CONDITIONS_ARCS[condition](s));
       var versNoeudAnime = s.noeudActif !== null && el.dataset.vers === s.noeudActif
-        && !el.classList.contains('arc-sans-animation');
+        && !el.classList.contains('arc-sans-animation') && conditionRemplie;
       el.classList.toggle('actif', versNoeudAnime);
     });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
@@ -1770,6 +1794,8 @@
     etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
+    etat.calculEffectue = false;
+    etat.avApresDeplEntier = false;
 
     // Le jeu ne remplit plus jamais le journal ni n'allume le logigramme (voir demarrerDemo
     // pour le revoir s\u00e9par\u00e9ment) : ce test d\u00e9cide juste si la division peut commencer.
@@ -1804,6 +1830,8 @@
     etat.resteDecimal = 0;
     etat.attenteCTN = false;
     etat.raisonFinDecimale = null;
+    etat.calculEffectue = false;
+    etat.avApresDeplEntier = false;
     afficherMessage('');
     rendreTout();
   });
