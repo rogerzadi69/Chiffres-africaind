@@ -1321,15 +1321,17 @@
     }
   }
   // Chaque nœud garde l'écran un temps différent : les conversions et les ajustements,
-  // les plus difficiles à suivre, restent affichés bien plus longtemps que les autres.
+  // les plus difficiles à suivre, restent affichés un peu plus longtemps que les autres —
+  // mais dans l'ensemble beaucoup plus vite qu'avant, pour ne pas trop faire attendre le
+  // résultat final pendant une partie réelle.
   var DUREES_PAS = {
-    AJUSTEMENT: 2400,
-    AJUSTEMENT_MR: 2000,
-    CONVERSION: 2200,
-    CALC: 1700,
-    DEPOT: 1500
+    AJUSTEMENT: 950,
+    AJUSTEMENT_MR: 800,
+    CONVERSION: 850,
+    CALC: 650,
+    DEPOT: 550
   };
-  var DUREE_PAS_DEFAUT = 1300;
+  var DUREE_PAS_DEFAUT = 450;
 
   function dureePas(noeud) {
     return DUREES_PAS[noeud] || DUREE_PAS_DEFAUT;
@@ -1645,7 +1647,10 @@
     for (var r = 0; r < 3; r++) {
       var rowAffichee; // valeurs à afficher village par village (7 cases)
       if (r === 0) {
-        rowAffichee = etat.dividende;
+        // Une fois en phase décimale, le Dividende affiché doit suivre le Reste qui continue
+        // d'être travaillé (decReste), sinon la Rangée 1 reste figée sur l'ancien reste entier
+        // même quand la division décimale retombe exactement à 0.
+        rowAffichee = dividendeActif(etat);
       } else if (r === 1) {
         if (etat.phase === 'composition') {
           rowAffichee = etat.diviseur;
@@ -1716,7 +1721,7 @@
 
       // lecture (arabe + lettres)
       var valeurLigne;
-      if (r === 0) valeurLigne = valeurTotale(etat.dividende);
+      if (r === 0) valeurLigne = valeurTotale(dividendeActif(etat));
       else if (r === 1) valeurLigne = (etat.phase === 'composition') ? valeurTotale(etat.diviseur) : valeurMR(etat);
       else valeurLigne = valeurQuotient();
 
@@ -1792,8 +1797,13 @@
         phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '</strong>La division décimale tombe juste (reste = 0).';
       } else if (etat.raisonFinDecimale === 'plafond') {
         phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '…</strong>Le calcul pourrait continuer indéfiniment (limité à ' + MAX_DECIMALES + ' décimales ici).';
-      } else {
+      } else if (etat.raisonFinDecimale === 'refus') {
         phraseFinale = '<strong>Quotient décimal : ' + texteQTComplet + '</strong>Arrêté à ta demande — le reste n’est pas encore nul, tu pourrais continuer plus loin.';
+      } else {
+        // raisonFinDecimale reste null tant que le calcul décimal n'a pas vraiment conclu
+        // (un nœud FIN atteint) : entre deux CTN, ou pendant l'enchaînement automatique
+        // d'une décimale, il ne faut surtout pas afficher une fausse conclusion.
+        phraseFinale = '<strong>Quotient décimal (en cours) : ' + texteQTComplet + '…</strong>Le calcul de cette décimale continue automatiquement.';
       }
       succesEl.innerHTML = '<span class="operation-rappel">' + texteDepart + ' = ' + texteQTComplet + (etat.qtDecimales.length === 0 ? ', reste ' + texteReste : '') + '</span>' + phraseFinale;
       succesEl.classList.add('visible');
