@@ -624,11 +624,11 @@
           <!-- EB_Q -> DEPL_ENTIER_A (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,690 L140,720" data-vers="DEPL_ENTIER"></path>
           <text class="arc-etiquette" x="154" y="712">Oui</text>
-          <!-- EB_Q -> MRG directement (Non) -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M205,650 L360,650 L360,853 L402,853" data-vers="MRG"></path>
+          <!-- EB_Q -> MRG directement (Non) — pas d'animation : trop de flèches convergent déjà sur MRG -->
+          <path class="arc-logigramme arc-sans-animation" marker-end="url(#fleche)" d="M205,650 L360,650 L360,853 L402,853" data-vers="MRG"></path>
           <text class="arc-etiquette" x="212" y="643">Non</text>
-          <!-- DEPL_ENTIER_A -> MRG -->
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M140,777 L140,847 L402,847" data-vers="MRG"></path>
+          <!-- DEPL_ENTIER_A -> MRG — pas d'animation, même raison -->
+          <path class="arc-logigramme arc-sans-animation" marker-end="url(#fleche)" d="M140,777 L140,847 L402,847" data-vers="MRG"></path>
 
           <!-- EB_SET -> MRG (colonne centrale) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,377 L470,807" data-vers="MRG"></path>
@@ -636,7 +636,8 @@
           <!-- MRG -> CONVERSION (Non), boucle par au-dessus -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M535,850 L667,850" data-vers="CONVERSION"></path>
           <text class="arc-etiquette" x="580" y="842">Non</text>
-          <path class="arc-logigramme" marker-end="url(#fleche)" d="M760,818 L760,780 L470,780 L470,807" data-vers="MRG"></path>
+          <!-- retour de CONVERSION vers MRG — pas d'animation, même raison -->
+          <path class="arc-logigramme arc-sans-animation" marker-end="url(#fleche)" d="M760,818 L760,780 L470,780 L470,807" data-vers="MRG"></path>
 
           <!-- MRG -> CALC (Oui) -->
           <path class="arc-logigramme" marker-end="url(#fleche)" d="M470,890 L470,920" data-vers="CALC"></path>
@@ -1690,9 +1691,14 @@
       el.classList.toggle('actif', actif);
       if (actif && !premierActif) premierActif = el;
     });
-    // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée.
+    // Les flèches qui mènent au nœud actif s'allument aussi, pas seulement la case d'arrivée —
+    // sauf les deux flèches marquées .arc-sans-animation autour de MRG (celle qui vient de
+    // « Déjà dans la boucle ? » à gauche, et celle qui boucle depuis CONVERSION à droite) :
+    // ensemble, elles brouillaient le losange plutôt que d'aider à le repérer.
     document.querySelectorAll('.arc-logigramme').forEach(function (el) {
-      el.classList.toggle('actif', s.noeudActif !== null && el.dataset.vers === s.noeudActif);
+      var versNoeudAnime = s.noeudActif !== null && el.dataset.vers === s.noeudActif
+        && !el.classList.contains('arc-sans-animation');
+      el.classList.toggle('actif', versNoeudAnime);
     });
     // On amène le nœud actif dans la vue à chaque changement d'étape, pour qu'on voie
     // toujours exactement où en est le raisonnement, même sur un long logigramme.
