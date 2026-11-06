@@ -251,7 +251,7 @@
     opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease;
     max-width: 90px; flex-wrap: wrap;
   }
-  .village.avec-glyphe .badge-glyphes { opacity: 1; transform: scale(1); }
+  .badge-glyphes { opacity: 1; transform: scale(1); }
   .badge-glyphes img { width: 9px; height: 9px; filter: brightness(0) invert(1); }
   .village.attire.conversion .badge-glyphes { background: var(--alerte); }
 
@@ -471,8 +471,11 @@
     phase: 'composition', // composition | multiplication | conversion
     rows: [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ],
     multiplicateurOriginal: null,
-    cadeauDeclenche: false
+    cadeauDeclenche: false,
+    depotEnCours: false,
+    generation: 0
   };
+  var DELAI_DEPOT_MS = 550;
 
   function creerImg(chiffre) {
     var img = document.createElement('img');
@@ -608,18 +611,15 @@
     return 'Un pion retiré des ' + NOMS_POSITION[idx] + ' du multiplicateur : le Modèle est recopié en commençant au village des ' + NOMS_POSITION[idx] + '.';
   }
 
-  function animerCopie(idxCible, modele) {
+  // Illumine, pour une seule position du Modèle, le village source et le village
+  // cible dans les résultats — appelée pas à pas pour ralentir le dépôt.
+  function animerDepotEtape(idxModele, idxCible) {
     var elements = [];
-    for (var m = 0; m < MAX_VILLAGES; m++) {
-      if (modele[m] > 0) {
-        var elM = document.querySelector('.trous[data-trous="0"] .village[data-pos="' + (m + 1) + '"]');
-        if (elM) elements.push(elM);
-        var cible = idxCible + m;
-        if (cible < MAX_VILLAGES) {
-          var elR = document.querySelector('.trous[data-trous="2"] .village[data-pos="' + (cible + 1) + '"]');
-          if (elR) elements.push(elR);
-        }
-      }
+    var elM = document.querySelector('.trous[data-trous="0"] .village[data-pos="' + (idxModele + 1) + '"]');
+    if (elM) elements.push(elM);
+    if (idxCible !== null) {
+      var elR = document.querySelector('.trous[data-trous="2"] .village[data-pos="' + (idxCible + 1) + '"]');
+      if (elR) elements.push(elR);
     }
     elements.forEach(function (el) { el.classList.add('copie-anime'); });
     setTimeout(function () { elements.forEach(function (el) { el.classList.remove('copie-anime'); }); }, 650);
@@ -641,22 +641,35 @@
     }
 
     if (etat.phase === 'multiplication' && r === 1) {
+      if (etat.depotEnCours) return;
       var idxActif = premierVillageActif(etat.rows[1]);
       if (idxActif === null || idx !== idxActif) return;
 
       etat.rows[1][idx]--;
       var modele = etat.rows[0];
-      var depassement = false;
-      for (var m = 0; m < MAX_VILLAGES; m++) {
-        if (modele[m] > 0) {
+      var positions = [];
+      for (var m = 0; m < MAX_VILLAGES; m++) if (modele[m] > 0) positions.push(m);
+
+      afficherMessage(decrireCopie(idx), (positions.length + 1) * DELAI_DEPOT_MS);
+      rendreTout();
+
+      if (positions.length === 0) return;
+
+      etat.depotEnCours = true;
+      var generationAuLancement = etat.generation;
+      positions.forEach(function (m, ordre) {
+        setTimeout(function () {
+          if (etat.generation !== generationAuLancement) return;
           var cible = idx + m;
           if (cible < MAX_VILLAGES) etat.rows[2][cible] += modele[m];
-          else depassement = true;
-        }
-      }
-      animerCopie(idx, modele);
-      afficherMessage(decrireCopie(idx) + (depassement ? ' Attention : une partie du produit dépasse la capacité du plateau (sept villages).' : ''));
-      rendreTout();
+          animerDepotEtape(m, cible < MAX_VILLAGES ? cible : null);
+          rendreTout();
+          if (ordre === positions.length - 1) {
+            etat.depotEnCours = false;
+            rendreTout();
+          }
+        }, (ordre + 1) * DELAI_DEPOT_MS);
+      });
       return;
     }
 
@@ -724,12 +737,9 @@
           graines.appendChild(grain);
         }
 
-        // L'étiquette affiche le compte en chiffres africains (un ou plusieurs glyphes).
+        // L'étiquette affiche toujours le compte en chiffres africains (zéro compris).
         badgeGlyphes.innerHTML = '';
-        if (compte > 0) {
-          creerGlyphesPourValeur(compte).forEach(function (el) { badgeGlyphes.appendChild(el); });
-        }
-        villageEl.classList.toggle('avec-glyphe', compte > 0);
+        creerGlyphesPourValeur(compte).forEach(function (el) { badgeGlyphes.appendChild(el); });
       }
 
       var multiplicateurEpuise = etat.rows[1].every(function (v) { return v === 0; });
@@ -782,7 +792,7 @@
     var multiplicateurEpuiseGlobal = etat.rows[1].every(function (v) { return v === 0; });
     document.getElementById('btn-vers-multiplication').style.display = (etat.phase === 'composition') ? '' : 'none';
     document.getElementById('btn-vers-conversion').style.display = (etat.phase === 'multiplication') ? '' : 'none';
-    document.getElementById('btn-vers-conversion').disabled = !multiplicateurEpuiseGlobal;
+    document.getElementById('btn-vers-conversion').disabled = !multiplicateurEpuiseGlobal || etat.depotEnCours;
 
     // remarque affichée pendant la conversion
     var remarque = document.getElementById('remarque-conservation');
@@ -849,16 +859,19 @@
   });
 
   document.getElementById('btn-vers-conversion').addEventListener('click', function () {
+    if (etat.depotEnCours) return;
     if (!etat.rows[1].every(function (v) { return v === 0; })) return;
     etat.phase = 'conversion';
     rendreTout();
   });
 
   document.getElementById('btn-recommencer').addEventListener('click', function () {
+    etat.generation++;
     etat.phase = 'composition';
     etat.rows = [ new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0), new Array(MAX_VILLAGES).fill(0) ];
     etat.multiplicateurOriginal = null;
     etat.cadeauDeclenche = false;
+    etat.depotEnCours = false;
     afficherMessage('');
     rendreTout();
   });
