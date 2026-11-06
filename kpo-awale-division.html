@@ -305,7 +305,15 @@
     box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 -1px 0 rgba(0,0,0,0.3) inset;
     margin-bottom: 9px;
   }
-  .legende-centrale { display: flex; gap: var(--ecart-trous); justify-content: center; }
+  .legende-centrale {
+    display: flex; gap: var(--ecart-trous); justify-content: center;
+    /* La rangée de villages compte aussi 2 villages décimaux après les unités (voir .trous),
+       ce que cette légende n'a pas : centrée seule, elle glisse d'un village vers la droite
+       par rapport aux villages réels. translateX (plutôt qu'une marge, qui élargirait la boîte
+       pour compenser) la recale d'un village exactement vers la gauche, pour que "UNITÉS"
+       retombe bien sur le dernier village entier, pas sur la partie décimale grisée. */
+    transform: translateX(calc(-1 * (var(--largeur-trou) + var(--ecart-trous) + var(--ecart-trous) * 0.6)));
+  }
   .legende-item {
     width: var(--largeur-trou); text-align: center; font-size: 9px; letter-spacing: 0.02em;
     text-transform: uppercase; color: var(--papier); line-height: 1.25;
